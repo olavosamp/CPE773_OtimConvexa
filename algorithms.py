@@ -1,14 +1,5 @@
 import numpy as np
 
-# class FunctionEvaluator:
-#     def __init__(self, func):
-#         self.func = func
-#         self.fevals = 0
-#     def eval(self, x):
-#         result = self.func(x)
-#         self.fevals += 1
-#         return result
-
 class OptimizationAlgorithm:
     def __init__(self, costFunc, xtol):
         self.costFunc = costFunc
