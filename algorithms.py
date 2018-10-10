@@ -94,7 +94,7 @@ class FibonacciSearch(LineSearch):
         I[1] = I[0]*self.fibSequence[self.iterations-2]/self.fibSequence[self.iterations-1]
 
         xA[0] = xU[0] - I[1]
-        xB[0] = xL[0] - I[1]
+        xB[0] = xL[0] + I[1]
 
         # Evaluate f(xA), f(xB)
         fA[0] = self.evaluate(xA[0])
@@ -102,8 +102,7 @@ class FibonacciSearch(LineSearch):
 
         # print("\nStart iterating")
         while True:
-            print("Iter: ", k)
-            I[k+2] = I[k+1]*self.fibSequence[self.iterations - k - 2]/ self.fibSequence[self.iterations - k-1]
+            I[k+2] = I[k+1]*self.fibSequence[self.iterations - k - 2]/self.fibSequence[self.iterations - k-1]
 
             if fA[k] >= fB[k]:
                 xL[k+1] = xA[k]
