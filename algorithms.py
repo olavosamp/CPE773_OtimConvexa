@@ -188,7 +188,7 @@ class GoldenSectionSearch(LineSearch):
             if (I[k] < self.epsilon) or (xA[k+1] > xB[k+1]):
                 if fA[k+1] >= fB[k+1]:
                     self.xOpt = 0.5*(xB[k+1] + xU[k+1])
-                elif fA[k+1] >= fB[k+1]:
+                elif fA[k+1] < fB[k+1]:
                     self.xOpt = 0.5*(xL[k+1] + xA[k+1])
 
                 return self.xOpt
@@ -197,9 +197,88 @@ class GoldenSectionSearch(LineSearch):
 
 
 # Quadratic interpolation method
+class QuadraticInterpolation(LineSearch):
+    def __init__(self, costFunc, interval, xtol=1e-8, maxIters=1e3):
+        super().__init__(costFunc, xtol)
+
+        self.maxIters = maxIters
+        self.epsilon = xtol/4
+        self.interval = interval
+
+    def optimize(self):
+        x0 = np.inf
+        x1 = self.interval[0]
+        x3 = self.interval[1]
+
+        x2 = (x1 + x3)/2
+        f1 = self.evaluate(x1)
+        f2 = self.evaluate(x2)
+        f3 = self.evaluate(x3)
+
+        while True:
+            arg1 = (x2**2 - x3**2)*f1 + (x3**2 - x1**2)*f2 + (x1**2 - x2**2)*f3
+            arg2 = 2*((x2 - x3)*f1 + (x3 - x1)*f2 + (x1 - x2)*f3)
+            xTest = arg1/arg2
+
+            fTest = self.evaluate(xTest)
+
+            if np.abs(xTest - x0) < self.epsilon:
+                self.xOpt = xTest
+                return self.xOpt
+            elif (x1 < xTest) and (xTest < x2):
+                if fTest <= f2:
+                    x3 = x2
+                    f3 = f2
+                    x2 = xTest
+                    f2 = fTest
+                else: # fTest > f2
+                    x1 = x2
+                    f1 = f2
+                    x2 = xTest
+                    f2 = fTest
+            elif (x2 < xTest) and (xTest < x3):
+                if fTest <= f2:
+                    x1 = x2
+                    f1 = f2
+                    x2 = xTest
+                    f2 = fTest
+                else: # fTest > f2
+                    x3 = xTest
+                    f3 = fTest
+            x0 = xTest
 
 # Cubic interpolation method
+# class XXXX(LineSearch):
+#     def __init__(self, costFunc, interval, xtol=1e-8, maxIters=1e3):
+#         super().__init__(costFunc, xtol)
+#
+#         self.maxIters = maxIters
+#         self.epsilon = xtol/4
+#         self.interval = interval
 
 # Davies-Swann-Campey Algorithm
+# class XXXX(LineSearch):
+#     def __init__(self, costFunc, interval, xtol=1e-8, maxIters=1e3):
+#         super().__init__(costFunc, xtol)
+#
+#         self.maxIters = maxIters
+#         self.epsilon = xtol/4
+#         self.interval = interval
+
+# Backtracking Line Search
+# class XXXX(LineSearch):
+#     def __init__(self, costFunc, interval, xtol=1e-8, maxIters=1e3):
+#         super().__init__(costFunc, xtol)
+#
+#         self.maxIters = maxIters
+#         self.epsilon = xtol/4
+#         self.interval = interval
 
 # Inexact Line Search
+# class XXXX(LineSearch):
+#     def __init__(self, costFunc, interval, xtol=1e-8, maxIters=1e3):
+#         super().__init__(costFunc, xtol)
+#
+#         self.maxIters = maxIters
+#         self.epsilon = xtol/4
+#         self.interval = interval
