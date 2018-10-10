@@ -121,7 +121,7 @@ class FibonacciSearch(LineSearch):
                 fA[k+1] = self.evaluate(xA[k+1])
                 fB[k+1] = fA[k]
 
-            if (k == self.iterations-2) or (xA[k+1] > fB[k+1]):
+            if (k == self.iterations-2) or (xA[k+1] > xB[k+1]):
                 self.xOpt = xA[k+1]
                 return self.xOpt
             else:
@@ -129,6 +129,72 @@ class FibonacciSearch(LineSearch):
 
 
 # Golden Section Search
+class GoldenSectionSearch(LineSearch):
+    def __init__(self, costFunc, interval, xtol=1e-8, maxIters=1e3):
+        super().__init__(costFunc, xtol)
+
+        self.maxIters = maxIters
+        self.epsilon = xtol/4
+        self.interval = interval
+
+        # self.goldenRatio = 1.618034
+        self.goldenRatio = (1 + np.sqrt(5))/2
+
+    def optimize(self):
+        # Initialize variables
+        fA = np.zeros(self.maxIters-1)
+        fB = np.zeros(self.maxIters-1)
+        xA = np.zeros(self.maxIters-1)
+        xB = np.zeros(self.maxIters-1)
+        xU = np.zeros(self.maxIters-1)
+        xL = np.zeros(self.maxIters-1)
+        I  = np.zeros(self.maxIters)
+
+        xL[0] = self.interval[0]
+        xU[0] = self.interval[1]
+
+        k = 0 # Iteration counter
+        I[0] = xU[0] - xL[0]
+        I[1] = I[0]/self.goldenRatio
+
+        xA[0] = xU[0] - I[1]
+        xB[0] = xL[0] + I[1]
+
+        # Evaluate f(xA), f(xB)
+        fA[0] = self.evaluate(xA[0])
+        fB[0] = self.evaluate(xB[0])
+
+        # print("\nStart iterating")
+        while True:
+            I[k+2] = I[k+1]/self.goldenRatio
+
+            if fA[k] >= fB[k]:
+                xL[k+1] = xA[k]
+                xU[k+1] = xU[k]
+                xA[k+1] = xB[k]
+                xB[k+1] = xA[k] + I[k+2]
+
+                fA[k+1] = fB[k]
+                fB[k+1] = self.evaluate(xB[k+1])
+            elif fA[k] < fB[k]:
+                xL[k+1] = xL[k]
+                xU[k+1] = xB[k]
+                xA[k+1] = xU[k+1] - I[k+2]
+                xB[k+1] = xA[k]
+
+                fA[k+1] = self.evaluate(xA[k+1])
+                fB[k+1] = fA[k]
+
+            if (I[k] < self.epsilon) or (xA[k+1] > xB[k+1]):
+                if fA[k+1] >= fB[k+1]:
+                    self.xOpt = 0.5*(xB[k+1] + xU[k+1])
+                elif fA[k+1] >= fB[k+1]:
+                    self.xOpt = 0.5*(xL[k+1] + xA[k+1])
+
+                return self.xOpt
+            else:
+                k += 1
+
 
 # Quadratic interpolation method
 

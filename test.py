@@ -1,6 +1,6 @@
 import numpy as np
 
-from algorithms import DichotomousSearch, FibonacciSearch
+from algorithms import DichotomousSearch, FibonacciSearch,GoldenSectionSearch
 from functions import poly1, quadratic
 
 def print_results(alg, string):
@@ -25,6 +25,13 @@ print_results(dichot, "\nDichotomous Search"+string)
 fib = FibonacciSearch(poly1, interval, xtol=xtol, maxIters=maxIters )
 # print(fib.compute_fibonacci(10))
 print_results(fib, "\nFibonacci Search"+string)
+
+# Golden Section Search
+# interval = [-0.5, 0.5]
+golden = GoldenSectionSearch(poly1, interval, xtol=xtol, maxIters=maxIters )
+# print(fib.compute_fibonacci(10))
+print_results(golden, "\nGolden Section Search"+string)
+
 
 # Algorithm
 # interval = [,]
