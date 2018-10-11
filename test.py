@@ -1,7 +1,7 @@
 import numpy as np
 
-from algorithms import (DichotomousSearch, FibonacciSearch,GoldenSectionSearch,
-                        QuadraticInterpolation)
+from algorithms import *#(DichotomousSearch, FibonacciSearch,GoldenSectionSearch,
+                        #QuadraticInterpolation)
 from functions import poly1, quadratic
 
 def print_results(alg, string):
@@ -17,7 +17,7 @@ maxIters = 1000
 string = "\nOptimize f(x) = −5x5 + 4x4 − 12x3 + 11x2 − 2x + 1\nSolution x = 0.10986"
 
 # Dichotomous Search
-interval = [-10., 0.5]
+interval = [-0.5, 0.5]
 dichot = DichotomousSearch(poly1, interval, xtol=xtol, maxIters=maxIters )
 print_results(dichot, "\nDichotomous Search"+string)
 
@@ -32,7 +32,11 @@ print_results(golden, "\nGolden Section Search"+string)
 
 # Quadratic Interpolation
 quadratic = QuadraticInterpolation(poly1, interval, xtol=xtol, maxIters=maxIters )
-print_results(quadratic, "\nGolden Section Search"+string)
+print_results(quadratic, "\nQuadratic Interpolation"+string)
+
+# Quadratic Interpolation
+cubic = CubicInterpolation(poly1, interval, xtol=xtol, maxIters=maxIters )
+print_results(cubic, "\nCubic Interpolation"+string)
 
 
 # Algorithm

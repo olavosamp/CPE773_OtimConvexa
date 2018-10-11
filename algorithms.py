@@ -1,4 +1,5 @@
 import numpy as np
+from autograd import grad
 
 class LineSearch:
     def __init__(self, costFunc, xtol):
@@ -248,13 +249,80 @@ class QuadraticInterpolation(LineSearch):
             x0 = xTest
 
 # Cubic interpolation method
-# class XXXX(LineSearch):
-#     def __init__(self, costFunc, interval, xtol=1e-8, maxIters=1e3):
-#         super().__init__(costFunc, xtol)
-#
-#         self.maxIters = maxIters
-#         self.epsilon = xtol/4
-#         self.interval = interval
+class CubicInterpolation(LineSearch):
+    def __init__(self, costFunc, interval, xtol=1e-8, maxIters=1e3):
+        super().__init__(costFunc, xtol)
+
+        self.maxIters = maxIters
+        self.epsilon  = xtol/4
+        self.interval = interval
+        self.numIters = 0
+
+    def optimize(self):
+        grad_func = grad(self.evaluate)
+
+        x = np.zeros(4)
+        fList = np.zeros(4)
+
+        x[0] = np.inf
+        x[1] = self.interval[0]
+        x[3] = self.interval[1]
+        x[2] = (x[1] + x[3])/2
+
+        fList[1] = self.evaluate(x[1])
+        fList[2] = self.evaluate(x[2])
+        fList[3] = self.evaluate(x[3])
+        f1_grad  = grad_func(x[1])
+        print("\nfgrad: ", f1_grad)
+        print("x: ", x)
+
+        while True:
+            print("")
+            beta  = (fList[2] - fList[1] + f1_grad*(x[1] - x[2]))/((x[1] - x[2])**2)
+            gamma = (fList[3] - fList[1] + f1_grad*(x[1] - x[3]))/((x[1] - x[3])**2)
+            theta = (2*(x[1]**2) - x[2]*(x[1] + x[2]))/(x[1] - x[2])
+            psi   = (2*(x[1]**2) - x[3]*(x[1] + x[3]))/(x[1] - x[3])
+
+            a3 = (beta - gamma)/(theta - psi)
+            a2 = beta - theta*a3
+            a1 = f1_grad - 2*a2*x[1] - 3*a3*(x[1]**2)
+
+            # Select xTest
+            minXValue = -a2/(3*a3)
+            print("a1 :", a1)
+            print("a2 :", a2)
+            print("a3 :", a3)
+
+            extremPointsPos = (-a2 + np.sqrt(a2**2 - 3*a1*a3))/(3*a3)
+            extremPointsNeg = (-a2 - np.sqrt(a2**2 - 3*a1*a3))/(3*a3)
+            print("extremPointsPos :", extremPointsPos)
+            print("extremPointsNeg :", extremPointsNeg)
+            print("minXValue: ", minXValue)
+            if extremPointsPos >= minXValue:
+                xTest = extremPointsPos
+            elif extremPointsNeg >= minXValue:
+                xTest = extremPointsNeg
+            fTest = self.evaluate(xTest)
+
+            print("XTEST: ", xTest)
+            print("x[0] ",x[0])
+            print("if ", np.abs(xTest - x[0]))
+            if (np.abs(xTest - x[0]) < self.epsilon) or (self.numIters > self.maxIters):
+                self.xOpt = xTest
+                return self.xOpt
+
+            maxArg = np.argmax(fList[1:])+1
+            print("flist: ", fList)
+            print("maxArg: ", maxArg)
+            x[0] = xTest
+            x[maxArg] = xTest
+            fList[maxArg] = fTest
+            if maxArg == 1:
+                f1_grad = grad_func(xTest)
+
+            self.numIters += 1
+
+
 
 # Davies-Swann-Campey Algorithm
 # class XXXX(LineSearch):
