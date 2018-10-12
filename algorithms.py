@@ -41,10 +41,10 @@ class DichotomousSearch(LineSearch):
         return self.interval
 
     def optimize(self):
-        self.numIters = 0
-        while (np.abs(self.interval[0] - self.interval[1]) > self.xtol) and (self.numIters < self.maxIters):
+        self.iter = 0
+        while (np.abs(self.interval[0] - self.interval[1]) > self.xtol) and (self.iter < self.maxIters):
             self.iteration()
-            self.numIters += 1
+            self.iter += 1
 
         self.xOpt = self.interval[0]
         return self.xOpt
@@ -256,7 +256,7 @@ class CubicInterpolation(LineSearch):
         self.maxIters = maxIters
         self.epsilon  = xtol/4
         self.interval = interval
-        self.numIters = 0
+        self.iter = 0
 
     def optimize(self):
         grad_func = grad(self.evaluate)
@@ -273,65 +273,134 @@ class CubicInterpolation(LineSearch):
         fList[2] = self.evaluate(x[2])
         fList[3] = self.evaluate(x[3])
         f1_grad  = grad_func(x[1])
-        print("\nfgrad: ", f1_grad)
-        print("x: ", x)
+        # print("\nfgrad: ", f1_grad)
+        # print("x: ", x)
 
         while True:
-            print("")
+            # print("Iter: ", self.iter)
             beta  = (fList[2] - fList[1] + f1_grad*(x[1] - x[2]))/((x[1] - x[2])**2)
             gamma = (fList[3] - fList[1] + f1_grad*(x[1] - x[3]))/((x[1] - x[3])**2)
             theta = (2*(x[1]**2) - x[2]*(x[1] + x[2]))/(x[1] - x[2])
             psi   = (2*(x[1]**2) - x[3]*(x[1] + x[3]))/(x[1] - x[3])
 
-            a3 = (beta - gamma)/(theta - psi)
+            a3 = (beta - gamma)/(theta - psi) + 1e-9
             a2 = beta - theta*a3
             a1 = f1_grad - 2*a2*x[1] - 3*a3*(x[1]**2)
 
             # Select xTest
             minXValue = -a2/(3*a3)
-            print("a1 :", a1)
-            print("a2 :", a2)
-            print("a3 :", a3)
+            # print("a1 :", a1)
+            # print("a2 :", a2)
+            # print("a3 :", a3)
 
             extremPointsPos = (-a2 + np.sqrt(a2**2 - 3*a1*a3))/(3*a3)
             extremPointsNeg = (-a2 - np.sqrt(a2**2 - 3*a1*a3))/(3*a3)
-            print("extremPointsPos :", extremPointsPos)
-            print("extremPointsNeg :", extremPointsNeg)
-            print("minXValue: ", minXValue)
-            if extremPointsPos >= minXValue:
+            # print("extremPointsPos :", extremPointsPos)
+            # print("extremPointsNeg :", extremPointsNeg)
+            # print("minXValue: ", minXValue)
+            if extremPointsPos > minXValue:
                 xTest = extremPointsPos
-            elif extremPointsNeg >= minXValue:
+            elif extremPointsNeg > minXValue:
                 xTest = extremPointsNeg
             fTest = self.evaluate(xTest)
 
-            print("XTEST: ", xTest)
-            print("x[0] ",x[0])
-            print("if ", np.abs(xTest - x[0]))
-            if (np.abs(xTest - x[0]) < self.epsilon) or (self.numIters > self.maxIters):
+            # print("XTEST: ", xTest)
+            # print("x[0]: ", x[0])
+            # print("|xTest - x[0]|: ", np.abs(xTest - x[0]))
+            if (np.abs(xTest - x[0]) < self.epsilon) or (self.iter > self.maxIters):
                 self.xOpt = xTest
                 return self.xOpt
 
             maxArg = np.argmax(fList[1:])+1
-            print("flist: ", fList)
-            print("maxArg: ", maxArg)
+            # print("flist: ", fList)
+            # print("maxArg: ", maxArg)
             x[0] = xTest
             x[maxArg] = xTest
             fList[maxArg] = fTest
+            # print(fTest)
+            # print("flist2: ", fList)
             if maxArg == 1:
                 f1_grad = grad_func(xTest)
 
-            self.numIters += 1
+            self.iter += 1
 
 
 
 # Davies-Swann-Campey Algorithm
-# class XXXX(LineSearch):
-#     def __init__(self, costFunc, interval, xtol=1e-8, maxIters=1e3):
-#         super().__init__(costFunc, xtol)
-#
-#         self.maxIters = maxIters
-#         self.epsilon = xtol/4
-#         self.interval = interval
+class DSCAlgorithm(LineSearch):
+    def __init__(self, costFunc, interval, xtol=1e-8, maxIters=1e3):
+        super().__init__(costFunc, xtol)
+
+        self.maxIters = maxIters
+        self.epsilon = xtol/4
+        self.interval = interval
+
+    def optimize(self):
+        # Initialize variables
+        self.iter = -1   # Make k = k-1 to account for zero-indexing
+        x0   = np.zeros(self.maxIters)
+        x1   = np.zeros(self.maxIters)
+        x_m1 = np.zeros(self.maxIters) # x_(-1)
+        increment =np.zeros(self.maxIters)
+        f0   = np.zeros(self.maxIters)
+        f1   = np.zeros(self.maxIters)
+        f_m1 = np.zeros(self.maxIters) # f_(-1)
+        f_m  = np.zeros(self.maxIters)
+
+        scaleFactor = 0.1   # K
+        increment[0] = 5*self.xtol  # Sigma_0
+        x0[0] = (self.interval[0]+self.interval[1])/2
+
+        while True:
+            self.iter += 1
+            x_m1[self.iter] = x0[self.iter] - increment[self.iter]
+            x_m1[self.iter] = x0[self.iter] + increment[self.iter]
+
+            f0[self.iter] = self.evaluate(x0[self.iter])
+            f1[self.iter] = self.evaluate(x1[self.iter])
+
+            if not((f_m1[self.iter] >= f0[self.iter]) and (f0[self.iter] <= f1[self.iter])):
+                if f0[self.iter] > f1[self.iter]:
+                    p = 1
+                elif f_m1[self.iter] < f0[self.iter]:
+                    p = -1
+                # STEP 4
+                xn = [x0[self.iter]]
+                fn = [f0[self.iter]]
+                n = 1
+                while True:
+                    xnNew = xn[n-1] + (2**(n-1))*p*increment[self.iter]
+                    xn.append(xnNew)
+                    fn.append(self.evaluate(xn[n]))
+
+                    if (fn[n] > fn[n-1]):
+                        break
+                    n += 1
+                # STEP 5
+                xm = xn[n-1] + (2**(n-2))*p*increment[self.iter]
+                fm = self.evaluate(xm)
+
+                # STEP 6
+                if fm >= fn[n-1]:
+                    x0[self.iter+1] = xn[n-1] + ((2**(n-2))*p*increment[self.iter]*(fn[n-2] - fm))/(2*(fn[n-2] - 2*fn[n-1] + fm))
+                else: # if fm[self.iter] < fNew
+                    x0[self.iter+1] = xm + ((2**(n-2))*p*increment[self.iter]*(fn[n-1] - fn[n]))/(2*(fn[n-1] - 2*fm + fn[n]))
+
+                if ((2**(n-2))*increment[self.iter]) <= self.xtol:
+                    # STEP 8
+                    self.xOpt = x0[self.iter+1]
+                    return self.xOpt
+                    # Return to STEP 2
+            else:
+                # STEP 7
+                x0[self.iter+1] = x0[self.iter] + (increment[self.iter]*(f_m1[self.iter] - f1[self.iter]))/(2*(f_m1[self.iter] - 2*f0[self.iter] + f1[self.iter]))
+                if increment[self.iter] < self.xtol:
+                    # STEP 8
+                    self.xOpt = x0[self.iter+1]
+                    return self.xOpt
+
+            increment[self.iter+1] = scaleFactor*increment[self.iter]
+
 
 # Backtracking Line Search
 # class XXXX(LineSearch):

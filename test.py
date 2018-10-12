@@ -14,7 +14,7 @@ def print_results(alg, string):
 
 xtol = 1e-5
 maxIters = 1000
-string = "\nOptimize f(x) = −5x5 + 4x4 − 12x3 + 11x2 − 2x + 1\nSolution x = 0.10986"
+string = "\nOptimize f(x) = -5x5 + 4x4 - 12x3 + 11x2 - 2x + 1\nSolution x = 0.10986"
 
 # Dichotomous Search
 interval = [-0.5, 0.5]
@@ -34,9 +34,13 @@ print_results(golden, "\nGolden Section Search"+string)
 quadratic = QuadraticInterpolation(poly1, interval, xtol=xtol, maxIters=maxIters )
 print_results(quadratic, "\nQuadratic Interpolation"+string)
 
-# Quadratic Interpolation
+# Cubic Interpolation
 cubic = CubicInterpolation(poly1, interval, xtol=xtol, maxIters=maxIters )
 print_results(cubic, "\nCubic Interpolation"+string)
+
+# Davies-Swann-Campey Algorithm
+dscAlg = DSCAlgorithm(poly1, interval, xtol=xtol, maxIters=maxIters )
+print_results(dscAlg, "\nDavies-Swann-Campey Algorithm Interpolation"+string)
 
 
 # Algorithm
