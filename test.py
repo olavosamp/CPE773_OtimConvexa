@@ -40,7 +40,30 @@ print_results(cubic, "\nCubic Interpolation"+string)
 
 # Davies-Swann-Campey Algorithm
 dscAlg = DSCAlgorithm(poly1, interval, xtol=xtol, maxIters=maxIters )
-print_results(dscAlg, "\nDavies-Swann-Campey Algorithm Interpolation"+string)
+print_results(dscAlg, "\nDavies-Swann-Campey Algorithm"+string)
+
+# Backtracking Line Search
+print("\nBacktracking Line Search")
+evaluations = 300
+results = np.empty(evaluations)
+fevals = np.empty(evaluations)
+solution = 0.10986
+for i in range(evaluations):
+    backtrack = BacktrackingLineSearch(poly1, interval, xtol=xtol, maxIters=maxIters )
+    results[i] = backtrack.optimize()
+    fevals[i]  = backtrack.fevals
+
+mask = results - solution < xtol
+sr = np.mean(np.where(mask, 1, 0))
+meanFevals = np.mean(fevals)
+meanFevalsSuccess = np.mean(fevals[mask])
+
+print("SR: {:.2f}".format( sr))
+print("Fevals: {:.2f}".format( meanFevals))
+print("Fevals Succ: {:.2f}".format( meanFevalsSuccess))
+
+
+# print_results(backtrack, "\nBacktracking Line Search"+string)
 
 
 # Algorithm

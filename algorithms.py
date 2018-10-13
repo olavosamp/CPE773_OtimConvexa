@@ -403,15 +403,53 @@ class DSCAlgorithm(LineSearch):
 
 
 # Backtracking Line Search
-# class XXXX(LineSearch):
-#     def __init__(self, costFunc, interval, xtol=1e-8, maxIters=1e3):
-#         super().__init__(costFunc, xtol)
-#
-#         self.maxIters = maxIters
-#         self.epsilon = xtol/4
-#         self.interval = interval
+class BacktrackingLineSearch(LineSearch):
+    def __init__(self, costFunc, interval, xtol=1e-8, maxIters=1e3):
+        super().__init__(costFunc, xtol)
 
-# Inexact Line Search
+        self.maxIters = maxIters
+        self.epsilon = xtol/4
+        self.interval = interval
+
+    def optimize(self):
+        alpha = 0.5    # alpha in ]0.0, 0.5[
+        beta  = 0.5     # beta in ]0.0, 1.0[
+        xOld  = np.inf
+        x = np.random.uniform(self.interval[0], self.interval[1])
+        # print("Initial X: ", x)
+        self.iter = 1
+        while self.iter <= self.maxIters:
+            # print("Iter: ", self.iter)
+            grad_func = grad(self.evaluate)
+            t = 1
+            iter2 = 1
+            # Search direction is minus gradient direction
+            direction = -np.sign(grad_func(x))
+            # print("DeltaX: ", direction)
+            # input()
+
+            gradient = grad_func(x)
+            fx = self.evaluate(x)
+            # approx = fx + alpha*t*gradient*direction
+            # linExtrapol = self.evaluate(x + t*direction)
+
+            while self.evaluate(x + t*direction) > fx + alpha*t*gradient*direction:
+                # print("Iter2: ", iter2)
+                t = beta*t
+                # print("t: ", t)
+                # approx = fx + alpha*t*gradient*direction
+                # linExtrapol = self.evaluate(x + t*direction)
+                iter2 += 1
+            xOld = x
+            x = x + t*direction
+
+            if (np.abs(x - xOld) <= self.xtol) or (gradient < self.xtol):
+                self.xOpt = x
+                return self.xOpt
+            else:
+                self.iter += 1
+
+## Inexact Line Search
 # class XXXX(LineSearch):
 #     def __init__(self, costFunc, interval, xtol=1e-8, maxIters=1e3):
 #         super().__init__(costFunc, xtol)
