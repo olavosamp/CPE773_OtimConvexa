@@ -1,5 +1,6 @@
 import numpy as np
 from autograd import grad
+from copy import copy
 
 class LineSearch:
     def __init__(self, costFunc, xtol):
@@ -11,6 +12,7 @@ class LineSearch:
         result = self.costFunc(x)
         self.fevals += 1
         return result
+
 
 class DichotomousSearch(LineSearch):
     def __init__(self, costFunc, interval, xtol=1e-8, maxIters=1e3):
@@ -41,6 +43,7 @@ class DichotomousSearch(LineSearch):
         return self.interval
 
     def optimize(self):
+        self.fevals = 0
         self.iter = 0
         while (np.abs(self.interval[0] - self.interval[1]) > self.xtol) and (self.iter < self.maxIters):
             self.iteration()
@@ -48,6 +51,7 @@ class DichotomousSearch(LineSearch):
 
         self.xOpt = self.interval[0]
         return self.xOpt
+
 
 # Fibonacci Search
 class FibonacciSearch(LineSearch):
@@ -78,6 +82,7 @@ class FibonacciSearch(LineSearch):
         return self.fibSequence
 
     def optimize(self):
+        self.fevals = 0
         # Initialize variables
         fA = np.zeros(self.iterations)
         fB = np.zeros(self.iterations)
@@ -142,6 +147,7 @@ class GoldenSectionSearch(LineSearch):
         self.goldenRatio = (1 + np.sqrt(5))/2
 
     def optimize(self):
+        self.fevals = 0
         # Initialize variables
         fA = np.zeros(self.maxIters-1)
         fB = np.zeros(self.maxIters-1)
@@ -207,6 +213,7 @@ class QuadraticInterpolation(LineSearch):
         self.interval = interval
 
     def optimize(self):
+        self.fevals = 0
         x0 = np.inf
         x1 = self.interval[0]
         x3 = self.interval[1]
@@ -248,7 +255,84 @@ class QuadraticInterpolation(LineSearch):
                     f3 = fTest
             x0 = xTest
 
-# Cubic interpolation method
+
+# # Cubic interpolation method
+# class CubicInterpolation(LineSearch):
+#     def __init__(self, costFunc, interval, xtol=1e-8, maxIters=1e3):
+#         super().__init__(costFunc, xtol)
+#
+#         self.maxIters = maxIters
+#         self.epsilon  = xtol/4
+#         self.interval = interval
+#         self.iter = 0
+#
+#     def optimize(self):
+      # self.fevals = 0
+#         grad_func = grad(self.evaluate)
+#
+#         x = np.zeros(4)
+#         fList = np.zeros(4)
+#
+#         x[0] = np.inf
+#         x[1] = self.interval[0]
+#         x[3] = self.interval[1]
+#         x[2] = (x[1] + x[3])/2
+#
+#         fList[1] = self.evaluate(x[1])
+#         fList[2] = self.evaluate(x[2])
+#         fList[3] = self.evaluate(x[3])
+#         f1_grad  = grad_func(x[1])
+#         # print("\nfgrad: ", f1_grad)
+#         # print("x: ", x)
+#
+#         while True:
+#             # print("Iter: ", self.iter)
+#             beta  = (fList[2] - fList[1] + f1_grad*(x[1] - x[2]))/((x[1] - x[2])**2)
+#             gamma = (fList[3] - fList[1] + f1_grad*(x[1] - x[3]))/((x[1] - x[3])**2)
+#             theta = (2*(x[1]**2) - x[2]*(x[1] + x[2]))/(x[1] - x[2])
+#             psi   = (2*(x[1]**2) - x[3]*(x[1] + x[3]))/(x[1] - x[3])
+#
+#             a3 = (beta - gamma)/(theta - psi) + 1e-9
+#             a2 = beta - theta*a3
+#             a1 = f1_grad - 2*a2*x[1] - 3*a3*(x[1]**2)
+#
+#             # Select xTest
+#             minXValue = -a2/(3*a3)
+#             # print("a1 :", a1)
+#             # print("a2 :", a2)
+#             # print("a3 :", a3)
+#
+#             extremPointsPos = (-a2 + np.sqrt(a2**2 - 3*a1*a3))/(3*a3)
+#             extremPointsNeg = (-a2 - np.sqrt(a2**2 - 3*a1*a3))/(3*a3)
+#             # print("extremPointsPos :", extremPointsPos)
+#             # print("extremPointsNeg :", extremPointsNeg)
+#             # print("minXValue: ", minXValue)
+#             if extremPointsPos > minXValue:
+#                 xTest = extremPointsPos
+#             elif extremPointsNeg > minXValue:
+#                 xTest = extremPointsNeg
+#             fTest = self.evaluate(xTest)
+#
+#             # print("XTEST: ", xTest)
+#             # print("x[0]: ", x[0])
+#             # print("|xTest - x[0]|: ", np.abs(xTest - x[0]))
+#             if (np.abs(xTest - x[0]) < self.epsilon) or (self.iter > self.maxIters):
+#                 self.xOpt = xTest
+#                 return self.xOpt
+#
+#             maxArg = np.argmax(fList[1:])+1
+#             # print("flist: ", fList)
+#             # print("maxArg: ", maxArg)
+#             x[0] = xTest
+#             x[maxArg] = xTest
+#             fList[maxArg] = fTest
+#             # print(fTest)
+#             # print("flist2: ", fList)
+#             if maxArg == 1:
+#                 f1_grad = grad_func(xTest)
+#
+#             # self.iter += 1
+
 class CubicInterpolation(LineSearch):
     def __init__(self, costFunc, interval, xtol=1e-8, maxIters=1e3):
         super().__init__(costFunc, xtol)
@@ -258,72 +342,74 @@ class CubicInterpolation(LineSearch):
         self.interval = interval
         self.iter = 0
 
+    def get_coeficients(self, x, fList, f1_grad):
+        beta  = (fList[1] - fList[0] + f1_grad*(x[1] - x[2]))/((x[1] - x[2])**2)
+        gamma = (fList[2] - fList[0] + f1_grad*(x[1] - x[3]))/((x[1] - x[3])**2)
+        theta = (2*(x[1]**2) - x[2]*(x[1] + x[2]))/(x[1] - x[2])
+        psi   = (2*(x[1]**2) - x[3]*(x[1] + x[3]))/(x[1] - x[3])
+
+        a3 = (beta - gamma)/(theta - psi)
+        a2 = beta - theta*a3
+        a1 = f1_grad - 2*a2*x[1] - 3*a3*(x[1]**2)
+        return beta, gamma, theta, psi, a1, a2, a3
+
+    def get_extremum_points(self, a1, a2, a3):
+        extremPos = (1/(3*a3))*(-a2 + np.sqrt(a2**2 - 3*a1*a3))
+        extremNeg = (1/(3*a3))*(-a2 - np.sqrt(a2**2 - 3*a1*a3))
+
+        return extremPos, extremNeg
+
+    def select_extremum(self, extremPos, extremNeg, a2, a3):
+        if extremPos > (-a2/(3*a3)):
+            xTest = extremPos
+        elif extremNeg > (-a2/(3*a3)):
+            xTest = extremNeg
+        else:
+            raise ValueError("Calculation error on xTest")
+        return xTest
+
+
     def optimize(self):
+        self.fevals = 0
         grad_func = grad(self.evaluate)
 
         x = np.zeros(4)
-        fList = np.zeros(4)
-
+        fList = np.zeros(3)
+        # STEP 1
         x[0] = np.inf
         x[1] = self.interval[0]
         x[3] = self.interval[1]
         x[2] = (x[1] + x[3])/2
+        # STEP 2
+        fList[0] = self.evaluate(x[1])
+        fList[1] = self.evaluate(x[2])
+        fList[2] = self.evaluate(x[3])
+        f1_grad  = copy(grad_func(x[1]))
+        # STEP 3
+        while self.iter <= self.maxIters:
+            beta, gamma, theta, psi, a1, a2, a3 = self.get_coeficients(x, fList, f1_grad)
 
-        fList[1] = self.evaluate(x[1])
-        fList[2] = self.evaluate(x[2])
-        fList[3] = self.evaluate(x[3])
-        f1_grad  = grad_func(x[1])
-        # print("\nfgrad: ", f1_grad)
-        # print("x: ", x)
+            extremPos, extremNeg = self.get_extremum_points(a1, a2, a3)
 
-        while True:
-            # print("Iter: ", self.iter)
-            beta  = (fList[2] - fList[1] + f1_grad*(x[1] - x[2]))/((x[1] - x[2])**2)
-            gamma = (fList[3] - fList[1] + f1_grad*(x[1] - x[3]))/((x[1] - x[3])**2)
-            theta = (2*(x[1]**2) - x[2]*(x[1] + x[2]))/(x[1] - x[2])
-            psi   = (2*(x[1]**2) - x[3]*(x[1] + x[3]))/(x[1] - x[3])
+            xTest = self.select_extremum(extremPos, extremNeg, a2, a3)
 
-            a3 = (beta - gamma)/(theta - psi) + 1e-9
-            a2 = beta - theta*a3
-            a1 = f1_grad - 2*a2*x[1] - 3*a3*(x[1]**2)
-
-            # Select xTest
-            minXValue = -a2/(3*a3)
-            # print("a1 :", a1)
-            # print("a2 :", a2)
-            # print("a3 :", a3)
-
-            extremPointsPos = (-a2 + np.sqrt(a2**2 - 3*a1*a3))/(3*a3)
-            extremPointsNeg = (-a2 - np.sqrt(a2**2 - 3*a1*a3))/(3*a3)
-            # print("extremPointsPos :", extremPointsPos)
-            # print("extremPointsNeg :", extremPointsNeg)
-            # print("minXValue: ", minXValue)
-            if extremPointsPos > minXValue:
-                xTest = extremPointsPos
-            elif extremPointsNeg > minXValue:
-                xTest = extremPointsNeg
-            fTest = self.evaluate(xTest)
-
-            # print("XTEST: ", xTest)
-            # print("x[0]: ", x[0])
-            # print("|xTest - x[0]|: ", np.abs(xTest - x[0]))
-            if (np.abs(xTest - x[0]) < self.epsilon) or (self.iter > self.maxIters):
+            # STEP 4
+            if np.abs(xTest - x[0]) < self.xtol:
                 self.xOpt = xTest
                 return self.xOpt
 
-            maxArg = np.argmax(fList[1:])+1
-            # print("flist: ", fList)
-            # print("maxArg: ", maxArg)
+            fTest = self.evaluate(xTest)
+
+            # STEP 5
+            m = np.argmax(fList)
             x[0] = xTest
-            x[maxArg] = xTest
-            fList[maxArg] = fTest
-            # print(fTest)
-            # print("flist2: ", fList)
-            if maxArg == 1:
-                f1_grad = grad_func(xTest)
+            x[m+1] = xTest
+            fList[m] = fTest
+
+            if m == 0:
+                f1_grad = copy(grad_func(xTest))
 
             self.iter += 1
-
 
 
 # Davies-Swann-Campey Algorithm
@@ -336,6 +422,7 @@ class DSCAlgorithm(LineSearch):
         self.interval = interval
 
     def optimize(self):
+        self.fevals = 0
         # Initialize variables
         self.iter = -1   # Make k = k-1 to account for zero-indexing
         x0   = np.zeros(self.maxIters)
@@ -410,40 +497,32 @@ class BacktrackingLineSearch(LineSearch):
         self.maxIters = maxIters
         self.epsilon = xtol/4
         self.interval = interval
+        self.alpha = 0.5    # alpha in ]0.0, 0.5[
+        self.beta  = 0.3     # beta in ]0.0, 1.0[
 
     def optimize(self):
-        alpha = 0.5    # alpha in ]0.0, 0.5[
-        beta  = 0.5     # beta in ]0.0, 1.0[
-        xOld  = np.inf
+        self.fevals = 0
+        grad_func = grad(self.evaluate)
         x = np.random.uniform(self.interval[0], self.interval[1])
         # print("Initial X: ", x)
         self.iter = 1
+        gradient = grad_func(x)
         while self.iter <= self.maxIters:
             # print("Iter: ", self.iter)
-            grad_func = grad(self.evaluate)
             t = 1
             iter2 = 1
+
             # Search direction is minus gradient direction
             direction = -np.sign(grad_func(x))
-            # print("DeltaX: ", direction)
-            # input()
-
-            gradient = grad_func(x)
             fx = self.evaluate(x)
-            # approx = fx + alpha*t*gradient*direction
-            # linExtrapol = self.evaluate(x + t*direction)
-
-            while self.evaluate(x + t*direction) > fx + alpha*t*gradient*direction:
+            while self.evaluate(x + t*direction) > fx + self.alpha*t*gradient*direction:
                 # print("Iter2: ", iter2)
-                t = beta*t
-                # print("t: ", t)
-                # approx = fx + alpha*t*gradient*direction
-                # linExtrapol = self.evaluate(x + t*direction)
+                t = self.beta*t
                 iter2 += 1
-            xOld = x
             x = x + t*direction
+            gradient = grad_func(x)
 
-            if (np.abs(x - xOld) <= self.xtol) or (gradient < self.xtol):
+            if gradient < self.xtol:
                 self.xOpt = x
                 return self.xOpt
             else:

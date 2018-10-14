@@ -53,7 +53,7 @@ for i in range(evaluations):
     results[i] = backtrack.optimize()
     fevals[i]  = backtrack.fevals
 
-mask = results - solution < xtol
+mask = np.abs(results - solution) < xtol
 sr = np.mean(np.where(mask, 1, 0))
 meanFevals = np.mean(fevals)
 meanFevalsSuccess = np.mean(fevals[mask])
@@ -62,6 +62,10 @@ print("SR: {:.2f}".format( sr))
 print("Fevals: {:.2f}".format( meanFevals))
 print("Fevals Succ: {:.2f}".format( meanFevalsSuccess))
 
+# from functions import functionObj
+# print("\nBandeira Cubic Interpolation")
+# bandCubic = BandeiraCubic(functionObj(poly1), maxIter=maxIters, interval=interval, xtol=xtol)
+# print("x*: ", bandCubic.find_min())
 
 # print_results(backtrack, "\nBacktracking Line Search"+string)
 
