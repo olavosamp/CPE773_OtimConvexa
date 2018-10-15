@@ -88,4 +88,4 @@ print(results)
 
 savePath += "results_table.xlsx"
 print("Table1 saved at\n{}\n".format(savePath))
-results.to_excel(savePath, float_format="%.6f"
+results.to_excel(savePath, float_format="%.6f")

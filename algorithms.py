@@ -256,83 +256,7 @@ class QuadraticInterpolation(LineSearch):
             x0 = xTest
 
 
-# # Cubic interpolation method
-# class CubicInterpolation(LineSearch):
-#     def __init__(self, costFunc, interval, xtol=1e-8, maxIters=1e3):
-#         super().__init__(costFunc, xtol)
-#
-#         self.maxIters = maxIters
-#         self.epsilon  = xtol/4
-#         self.interval = interval
-#         self.iter = 0
-#
-#     def optimize(self):
-      # self.fevals = 0
-#         grad_func = grad(self.evaluate)
-#
-#         x = np.zeros(4)
-#         fList = np.zeros(4)
-#
-#         x[0] = np.inf
-#         x[1] = self.interval[0]
-#         x[3] = self.interval[1]
-#         x[2] = (x[1] + x[3])/2
-#
-#         fList[1] = self.evaluate(x[1])
-#         fList[2] = self.evaluate(x[2])
-#         fList[3] = self.evaluate(x[3])
-#         f1_grad  = grad_func(x[1])
-#         # print("\nfgrad: ", f1_grad)
-#         # print("x: ", x)
-#
-#         while True:
-#             # print("Iter: ", self.iter)
-#             beta  = (fList[2] - fList[1] + f1_grad*(x[1] - x[2]))/((x[1] - x[2])**2)
-#             gamma = (fList[3] - fList[1] + f1_grad*(x[1] - x[3]))/((x[1] - x[3])**2)
-#             theta = (2*(x[1]**2) - x[2]*(x[1] + x[2]))/(x[1] - x[2])
-#             psi   = (2*(x[1]**2) - x[3]*(x[1] + x[3]))/(x[1] - x[3])
-#
-#             a3 = (beta - gamma)/(theta - psi) + 1e-9
-#             a2 = beta - theta*a3
-#             a1 = f1_grad - 2*a2*x[1] - 3*a3*(x[1]**2)
-#
-#             # Select xTest
-#             minXValue = -a2/(3*a3)
-#             # print("a1 :", a1)
-#             # print("a2 :", a2)
-#             # print("a3 :", a3)
-#
-#             extremPointsPos = (-a2 + np.sqrt(a2**2 - 3*a1*a3))/(3*a3)
-#             extremPointsNeg = (-a2 - np.sqrt(a2**2 - 3*a1*a3))/(3*a3)
-#             # print("extremPointsPos :", extremPointsPos)
-#             # print("extremPointsNeg :", extremPointsNeg)
-#             # print("minXValue: ", minXValue)
-#             if extremPointsPos > minXValue:
-#                 xTest = extremPointsPos
-#             elif extremPointsNeg > minXValue:
-#                 xTest = extremPointsNeg
-#             fTest = self.evaluate(xTest)
-#
-#             # print("XTEST: ", xTest)
-#             # print("x[0]: ", x[0])
-#             # print("|xTest - x[0]|: ", np.abs(xTest - x[0]))
-#             if (np.abs(xTest - x[0]) < self.epsilon) or (self.iter > self.maxIters):
-#                 self.xOpt = xTest
-#                 return self.xOpt
-#
-#             maxArg = np.argmax(fList[1:])+1
-#             # print("flist: ", fList)
-#             # print("maxArg: ", maxArg)
-#             x[0] = xTest
-#             x[maxArg] = xTest
-#             fList[maxArg] = fTest
-#             # print(fTest)
-#             # print("flist2: ", fList)
-#             if maxArg == 1:
-#                 f1_grad = grad_func(xTest)
-#
-#             # self.iter += 1
-
+# Cubic interpolation method
 class CubicInterpolation(LineSearch):
     def __init__(self, costFunc, interval, xtol=1e-8, maxIters=1e3):
         super().__init__(costFunc, xtol)
@@ -342,74 +266,164 @@ class CubicInterpolation(LineSearch):
         self.interval = interval
         self.iter = 0
 
-    def get_coeficients(self, x, fList, f1_grad):
-        beta  = (fList[1] - fList[0] + f1_grad*(x[1] - x[2]))/((x[1] - x[2])**2)
-        gamma = (fList[2] - fList[0] + f1_grad*(x[1] - x[3]))/((x[1] - x[3])**2)
-        theta = (2*(x[1]**2) - x[2]*(x[1] + x[2]))/(x[1] - x[2])
-        psi   = (2*(x[1]**2) - x[3]*(x[1] + x[3]))/(x[1] - x[3])
-
-        a3 = (beta - gamma)/(theta - psi)
-        a2 = beta - theta*a3
-        a1 = f1_grad - 2*a2*x[1] - 3*a3*(x[1]**2)
-        return beta, gamma, theta, psi, a1, a2, a3
-
-    def get_extremum_points(self, a1, a2, a3):
-        extremPos = (1/(3*a3))*(-a2 + np.sqrt(a2**2 - 3*a1*a3))
-        extremNeg = (1/(3*a3))*(-a2 - np.sqrt(a2**2 - 3*a1*a3))
-
-        return extremPos, extremNeg
-
-    def select_extremum(self, extremPos, extremNeg, a2, a3):
-        if extremPos > (-a2/(3*a3)):
-            xTest = extremPos
-        elif extremNeg > (-a2/(3*a3)):
-            xTest = extremNeg
-        else:
-            raise ValueError("Calculation error on xTest")
-        return xTest
-
-
     def optimize(self):
         self.fevals = 0
         grad_func = grad(self.evaluate)
 
         x = np.zeros(4)
-        fList = np.zeros(3)
-        # STEP 1
+        fList = np.zeros(4)
+
         x[0] = np.inf
         x[1] = self.interval[0]
         x[3] = self.interval[1]
         x[2] = (x[1] + x[3])/2
-        # STEP 2
-        fList[0] = self.evaluate(x[1])
-        fList[1] = self.evaluate(x[2])
-        fList[2] = self.evaluate(x[3])
-        f1_grad  = copy(grad_func(x[1]))
-        # STEP 3
-        while self.iter <= self.maxIters:
-            beta, gamma, theta, psi, a1, a2, a3 = self.get_coeficients(x, fList, f1_grad)
+        # print("Initial X: ", x[1:])
 
-            extremPos, extremNeg = self.get_extremum_points(a1, a2, a3)
+        fList[1] = self.evaluate(x[1])
+        fList[2] = self.evaluate(x[2])
+        fList[3] = self.evaluate(x[3])
+        f1_grad  = grad_func(x[1])
+        # print("\nGrad f(x): ", f1_grad)
+        # print("\nf(x): ", fList[1:])
+        # print("x: ", x)
 
-            xTest = self.select_extremum(extremPos, extremNeg, a2, a3)
+        while True:
+            # print("Iter: ", self.iter)
+            beta  = (fList[2] - fList[1] + f1_grad*(x[1] - x[2]))/((x[1] - x[2])**2)
+            gamma = (fList[3] - fList[1] + f1_grad*(x[1] - x[3]))/((x[1] - x[3])**2)
+            theta = (2*(x[1]**2) - x[2]*(x[1] + x[2]))/(x[1] - x[2])
+            psi   = (2*(x[1]**2) - x[3]*(x[1] + x[3]))/(x[1] - x[3])
 
-            # STEP 4
-            if np.abs(xTest - x[0]) < self.xtol:
+            a3 = (beta - gamma)/(theta - psi) + 1e-9
+            a2 = beta - theta*a3
+            a1 = f1_grad - 2*a2*x[1] - 3*a3*(x[1]**2)
+
+            # print("beta: ", beta)
+            # print("gamma: ", gamma)
+            # print("theta: ", theta)
+            # print("psi: ", psi)
+            # print("a_3: ", a3)
+            # print("a_2: ", a2)
+            # print("a_1: ", a1)
+            # Select xTest
+            minXValue = -a2/(3*a3)
+
+            # extremPointsPos = (-a2 + np.sqrt(a2**2 - 3*a1*a3))/(3*a3)
+            # extremPointsNeg = (-a2 - np.sqrt(a2**2 - 3*a1*a3))/(3*a3)
+            extremPointsPos = (1/(3*a3)) * (-a2 + np.sqrt(a2**2 - 3*a1*a3))
+            extremPointsNeg = (1/(3*a3)) * (-a2 + np.sqrt(a2**2 + 3*a1*a3))
+
+            # print("extremPointsPos :", extremPointsPos)
+            # print("extremPointsNeg :", extremPointsNeg)
+            # print("minXValue: ", minXValue)
+            if extremPointsPos > minXValue:
+                xTest = extremPointsPos
+            elif extremPointsNeg > minXValue:
+                xTest = extremPointsNeg
+            else:
+                xTest = extremPointsPos
+            fTest = self.evaluate(xTest)
+            # print("xTest: ", xTest)
+            # print("fTest: ", fTest)
+            # input()
+
+            # print("XTEST: ", xTest)
+            # print("x[0]: ", x[0])
+            # print("|xTest - x[0]|: ", np.abs(xTest - x[0]))
+            if (np.abs(xTest - x[0]) < self.epsilon) or (self.iter > self.maxIters):
                 self.xOpt = xTest
                 return self.xOpt
 
-            fTest = self.evaluate(xTest)
-
-            # STEP 5
-            m = np.argmax(fList)
+            maxArg = np.argmax(fList[1:])+1
+            # print("flist: ", fList)
+            # print("maxArg: ", maxArg)
             x[0] = xTest
-            x[m+1] = xTest
-            fList[m] = fTest
-
-            if m == 0:
-                f1_grad = copy(grad_func(xTest))
+            x[maxArg] = xTest
+            fList[maxArg] = fTest
+            # print(fTest)
+            # print("flist2: ", fList)
+            if maxArg == 1:
+                f1_grad = grad_func(xTest)
 
             self.iter += 1
+
+# class CubicInterpolation(LineSearch):
+#     def __init__(self, costFunc, interval, xtol=1e-8, maxIters=1e3):
+#         super().__init__(costFunc, xtol)
+#
+#         self.maxIters = maxIters
+#         self.epsilon  = xtol/4
+#         self.interval = interval
+#         self.iter = 0
+#
+#     def get_coeficients(self, x, fList, f1_grad):
+#         beta  = (fList[1] - fList[0] + f1_grad*(x[1] - x[2]))/((x[1] - x[2])**2)
+#         gamma = (fList[2] - fList[0] + f1_grad*(x[1] - x[3]))/((x[1] - x[3])**2)
+#         theta = (2*(x[1]**2) - x[2]*(x[1] + x[2]))/(x[1] - x[2])
+#         psi   = (2*(x[1]**2) - x[3]*(x[1] + x[3]))/(x[1] - x[3])
+#
+#         a3 = (beta - gamma)/(theta - psi)
+#         a2 = beta - theta*a3
+#         a1 = f1_grad - 2*a2*x[1] - 3*a3*(x[1]**2)
+#         return beta, gamma, theta, psi, a1, a2, a3
+#
+#     def get_extremum_points(self, a1, a2, a3):
+#         extremPos = (1/(3*a3))*(-a2 + np.sqrt(a2**2 - 3*a1*a3))
+#         extremNeg = (1/(3*a3))*(-a2 - np.sqrt(a2**2 - 3*a1*a3))
+#
+#         return extremPos, extremNeg
+#
+#     def select_extremum(self, extremPos, extremNeg, a2, a3):
+#         if extremPos > (-a2/(3*a3)):
+#             xTest = extremPos
+#         elif extremNeg > (-a2/(3*a3)):
+#             xTest = extremNeg
+#         else:
+#             raise ValueError("Calculation error on xTest")
+#         return xTest
+#
+#
+#     def optimize(self):
+#         self.fevals = 0
+#         grad_func = grad(self.evaluate)
+#
+#         x = np.zeros(4)
+#         fList = np.zeros(3)
+#         # STEP 1
+#         x[0] = np.inf
+#         x[1] = self.interval[0]
+#         x[3] = self.interval[1]
+#         x[2] = (x[1] + x[3])/2
+#         # STEP 2
+#         fList[0] = self.evaluate(x[1])
+#         fList[1] = self.evaluate(x[2])
+#         fList[2] = self.evaluate(x[3])
+#         f1_grad  = copy(grad_func(x[1]))
+#         # STEP 3
+#         while self.iter <= self.maxIters:
+#             beta, gamma, theta, psi, a1, a2, a3 = self.get_coeficients(x, fList, f1_grad)
+#
+#             extremPos, extremNeg = self.get_extremum_points(a1, a2, a3)
+#
+#             xTest = self.select_extremum(extremPos, extremNeg, a2, a3)
+#
+#             # STEP 4
+#             if np.abs(xTest - x[0]) < self.xtol:
+#                 self.xOpt = xTest
+#                 return self.xOpt
+#
+#             fTest = self.evaluate(xTest)
+#
+#             # STEP 5
+#             m = np.argmax(fList)
+#             x[0] = xTest
+#             x[m+1] = xTest
+#             fList[m] = fTest
+#
+#             if m == 0:
+#                 f1_grad = copy(grad_func(xTest))
+#
+#             self.iter += 1
 
 
 # Davies-Swann-Campey Algorithm
