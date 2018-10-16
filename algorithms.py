@@ -1,5 +1,6 @@
-import numpy as np
+# import numpy as np
 from autograd import grad
+import autograd.numpy as np
 from copy import copy
 
 class LineSearch:
@@ -48,8 +49,10 @@ class DichotomousSearch(LineSearch):
         while (np.abs(self.interval[0] - self.interval[1]) > self.xtol) and (self.iter < self.maxIters):
             self.iteration()
             self.iter += 1
+            # print("interval: ", self.interval[0])
 
         self.xOpt = self.interval[0]
+        # input()
         return self.xOpt
 
 
@@ -222,13 +225,18 @@ class QuadraticInterpolation(LineSearch):
         f1 = self.evaluate(x1)
         f2 = self.evaluate(x2)
         f3 = self.evaluate(x3)
-
+        # print("f1: ", f1)
+        # print("f2: ", f2)
+        # print("f3: ", f3)
         while True:
             arg1 = (x2**2 - x3**2)*f1 + (x3**2 - x1**2)*f2 + (x1**2 - x2**2)*f3
             arg2 = 2*((x2 - x3)*f1 + (x3 - x1)*f2 + (x1 - x2)*f3)
             xTest = arg1/arg2
 
             fTest = self.evaluate(xTest)
+            # print(fTest)
+            # print(xTest)
+            # input()
 
             if np.abs(xTest - x0) < self.epsilon:
                 self.xOpt = xTest
@@ -277,15 +285,11 @@ class CubicInterpolation(LineSearch):
         x[1] = self.interval[0]
         x[3] = self.interval[1]
         x[2] = (x[1] + x[3])/2
-        # print("Initial X: ", x[1:])
 
         fList[1] = self.evaluate(x[1])
         fList[2] = self.evaluate(x[2])
         fList[3] = self.evaluate(x[3])
         f1_grad  = grad_func(x[1])
-        # print("\nGrad f(x): ", f1_grad)
-        # print("\nf(x): ", fList[1:])
-        # print("x: ", x)
 
         while True:
             # print("Iter: ", self.iter)
@@ -293,59 +297,47 @@ class CubicInterpolation(LineSearch):
             gamma = (fList[3] - fList[1] + f1_grad*(x[1] - x[3]))/((x[1] - x[3])**2)
             theta = (2*(x[1]**2) - x[2]*(x[1] + x[2]))/(x[1] - x[2])
             psi   = (2*(x[1]**2) - x[3]*(x[1] + x[3]))/(x[1] - x[3])
-
-            a3 = (beta - gamma)/(theta - psi) + 1e-9
-            a2 = beta - theta*a3
-            a1 = f1_grad - 2*a2*x[1] - 3*a3*(x[1]**2)
-
             # print("beta: ", beta)
             # print("gamma: ", gamma)
             # print("theta: ", theta)
             # print("psi: ", psi)
-            # print("a_3: ", a3)
-            # print("a_2: ", a2)
-            # print("a_1: ", a1)
+            a3 = (beta - gamma)/(theta - psi)
+            a2 = beta - theta*a3
+            a1 = f1_grad - 2*a2*x[1] - 3*a3*(x[1]**2)
+            # print("a3: ", a3)
+            # print("a2: ", a2)
+            # print("a1: ", a1)
             # Select xTest
             minXValue = -a2/(3*a3)
 
-            # extremPointsPos = (-a2 + np.sqrt(a2**2 - 3*a1*a3))/(3*a3)
-            # extremPointsNeg = (-a2 - np.sqrt(a2**2 - 3*a1*a3))/(3*a3)
             extremPointsPos = (1/(3*a3)) * (-a2 + np.sqrt(a2**2 - 3*a1*a3))
             extremPointsNeg = (1/(3*a3)) * (-a2 + np.sqrt(a2**2 + 3*a1*a3))
+            # print("extremPointsPos: ", extremPointsPos)
+            # print("extremPointsNeg: ", extremPointsNeg)
 
-            # print("extremPointsPos :", extremPointsPos)
-            # print("extremPointsNeg :", extremPointsNeg)
-            # print("minXValue: ", minXValue)
             if extremPointsPos > minXValue:
                 xTest = extremPointsPos
             elif extremPointsNeg > minXValue:
                 xTest = extremPointsNeg
             else:
                 xTest = extremPointsPos
-            fTest = self.evaluate(xTest)
             # print("xTest: ", xTest)
+            fTest = self.evaluate(xTest)
             # print("fTest: ", fTest)
-            # input()
 
-            # print("XTEST: ", xTest)
-            # print("x[0]: ", x[0])
-            # print("|xTest - x[0]|: ", np.abs(xTest - x[0]))
             if (np.abs(xTest - x[0]) < self.epsilon) or (self.iter > self.maxIters):
                 self.xOpt = xTest
                 return self.xOpt
 
             maxArg = np.argmax(fList[1:])+1
-            # print("flist: ", fList)
-            # print("maxArg: ", maxArg)
             x[0] = xTest
             x[maxArg] = xTest
             fList[maxArg] = fTest
-            # print(fTest)
-            # print("flist2: ", fList)
             if maxArg == 1:
                 f1_grad = grad_func(xTest)
 
             self.iter += 1
+            # input()
 
 # class CubicInterpolation(LineSearch):
 #     def __init__(self, costFunc, interval, xtol=1e-8, maxIters=1e3):
@@ -505,14 +497,14 @@ class DSCAlgorithm(LineSearch):
 
 # Backtracking Line Search
 class BacktrackingLineSearch(LineSearch):
-    def __init__(self, costFunc, interval, xtol=1e-8, maxIters=1e3):
+    def __init__(self, costFunc, interval, xtol=1e-8, maxIters=1e3, alpha=0.5, beta=0.3):
         super().__init__(costFunc, xtol)
 
         self.maxIters = maxIters
         self.epsilon = xtol/4
         self.interval = interval
-        self.alpha = 0.5    # alpha in ]0.0, 0.5[
-        self.beta  = 0.3     # beta in ]0.0, 1.0[
+        self.alpha = alpha    # alpha in ]0.0, 0.5[
+        self.beta  = beta     # beta in ]0.0, 1.0[
 
     def optimize(self):
         self.fevals = 0

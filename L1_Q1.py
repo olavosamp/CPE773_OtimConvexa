@@ -1,51 +1,70 @@
 import time
-import numpy  as np
+import autograd.numpy  as np
 import pandas as pd
 from   tqdm   import tqdm
+from scipy.optimize import brute
 
 import dirs
 from algorithms import *#(DichotomousSearch, FibonacciSearch,GoldenSectionSearch,
                         #QuadraticInterpolation)
-from functions import poly1
+from functions import poly1, func2, func3
 
-algList = [(DichotomousSearch, "Dichotomous Search"),
+algList = [(brute, "Brute Force"),
+            (DichotomousSearch, "Dichotomous Search"),
             (FibonacciSearch, "Fibonacci Search"),
             (GoldenSectionSearch, "Golden Section Search"),
             (QuadraticInterpolation, "Quadratic Interpolation"),
             (CubicInterpolation, "Cubic Interpolation"),
-            (DSCAlgorithm, "Davies Swann Campey Algorithm"),
+            (DSCAlgorithm, "Davies Swann Campey Algorithm")
             ]
 
 algListStochastic = [(BacktrackingLineSearch, "Backtracking Line Search")]
 
-targetFunction  = poly1
+# targetFunction  = poly1
+# interval        = [-0.5, 0.5]
+
+targetFunction  = func2
+interval        = [6., 9.9]
+
+# targetFunction = func3
+# interval        = [0, 2*np.pi]
+
 maxIters        = int(1e3)
-interval        = [-0.5, 0.5]
 xtol            = 1e-5
-xSolution       = 0.10986
+# xSolution       = 0.10986
 runtimeEvals    = 10
 stochasticEvals = 500
-savePath = dirs.results+"L1_Q1_"
+savePath = dirs.results+"L1_Q_4-3_"
 
 # Compute Deterministic Algorithms
 resultsList = []
 for algData in algList:
     dataDict = dict()
 
-    alg     = algData[0](targetFunction, interval, xtol=xtol, maxIters=maxIters)
     algName = algData[1]
     print("\nRunning ", algName)
+    if algName == "Brute Force":
+        optimum, _, _, Jout = brute(targetFunction, [(interval[0], interval[1])], Ns=round(1/xtol), full_output=True)
+        optimum   = optimum[0]
+        xSolution = optimum
+        fevals = len(Jout)
+    else:
+        alg = algData[0](targetFunction, interval, xtol=xtol, maxIters=maxIters)
+        optimum = alg.optimize()
+        fevals  = alg.fevals
+    print("Result: \nx* = ", optimum)
 
-    optimum = alg.optimize()
-    fevals  = alg.fevals
     dataDict["Algorithm"] = algName
     dataDict["Delta X"]   = np.abs(xSolution - optimum)
     dataDict["FEvals"]    = fevals
 
     runtimeList = np.empty(runtimeEvals)
-    for i in range(runtimeEvals):
+    for i in tqdm(range(runtimeEvals)):
         start = time.perf_counter()
-        alg.optimize()
+        if algName == "Brute Force":
+            brute(poly1, [(interval[0], interval[1])], Ns=round(1/xtol), full_output=True)
+        else:
+            alg.optimize()
         end  = time.perf_counter()
         runtimeList[i] = end - start
 
@@ -76,7 +95,7 @@ for algData in algListStochastic:
 
     deltaX = np.abs(xSolution - stochList[:, 0])
     mask   = deltaX < xtol
-    dataDict["Delta X"]   = np.mean(deltaX)
+    dataDict["Delta X"]   = np.mean(deltaX[mask])
     dataDict["FEvals"]    = np.mean(stochList[mask, 1])
 
     dataDict["Runtime"]   = np.mean(runtimeList)
@@ -88,4 +107,5 @@ print(results)
 
 savePath += "results_table.xlsx"
 print("Table1 saved at\n{}\n".format(savePath))
-results.to_excel(savePath, float_format="%.6f")
+# results.to_excel(savePath, float_format="%.6f")
+results.to_excel(savePath)
