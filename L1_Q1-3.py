@@ -22,19 +22,22 @@ algListStochastic = [(BacktrackingLineSearch, "Backtracking Line Search")]
 
 # targetFunction  = poly1
 # interval        = [-0.5, 0.5]
+# savePath = dirs.results+"L1_Q_4-2_"
 
-targetFunction  = func2
-interval        = [6., 9.9]
+# targetFunction  = func2
+# interval        = [6., 9.9]
+# savePath = dirs.results+"L1_Q_4-3_"
 
-# targetFunction = func3
-# interval        = [0, 2*np.pi]
+targetFunction = func3
+interval        = [0, 2*np.pi]
+savePath = dirs.results+"L1_Q_4-4_"
 
 maxIters        = int(1e3)
 xtol            = 1e-5
 # xSolution       = 0.10986
 runtimeEvals    = 10
 stochasticEvals = 500
-savePath = dirs.results+"L1_Q_4-3_"
+
 
 # Compute Deterministic Algorithms
 resultsList = []
@@ -95,7 +98,8 @@ for algData in algListStochastic:
 
     deltaX = np.abs(xSolution - stochList[:, 0])
     mask   = deltaX < xtol
-    dataDict["Delta X"]   = np.mean(deltaX[mask])
+    # dataDict["Delta X"]   = np.mean(deltaX[mask]) # Succesful results only
+    dataDict["Delta X"]   = np.mean(deltaX) # All results
     dataDict["FEvals"]    = np.mean(stochList[mask, 1])
 
     dataDict["Runtime"]   = np.mean(runtimeList)

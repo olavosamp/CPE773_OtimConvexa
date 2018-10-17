@@ -24,6 +24,12 @@ def func3(x):
     # f(x) = −3x sin 0.75x + e−2x
     if x < 0.:
         x = 0.
-    if x > 2*pi:
-        x = 2*pi
+    if x > 2*np.pi:
+        x = 2*np.pi
     return -3*x*np.sin(0.75*x) + np.exp(-2*x)
+
+def func4(x):
+    xLen = np.shape(x)[0]
+    if xLen < 2:
+        raise ValueError("Input dimensions doesn't match. Expected 2, received {}.".format(xLen))
+    return 0.7*(x[0]**4) - 8*(x[0]**2) + 6*(x[1]**2) + np.cos(x[0]*x[1]) - 8*x[0]

@@ -18,8 +18,10 @@ maxIters = 1000
 # Function 1
 string = "\nOptimize f(x) = -5x5 + 4x4 - 12x3 + 11x2 - 2x + 1\nSolution x = 0.10986"
 # interval = [-0.5, 0.5]
-targetFunction = func2
-interval = [6., 9.9]
+# targetFunction = func2
+# interval = [6., 9.9]
+targetFunction = func3
+interval = [0, 2*np.pi]
 
 # Brute force
 print("Brute Force"+string)
@@ -63,7 +65,8 @@ results = np.empty(evaluations)
 fevals = np.empty(evaluations)
 # solution = 0.10986
 for i in range(evaluations):
-    backtrack = BacktrackingLineSearch(targetFunction, interval, xtol=xtol, maxIters=maxIters )
+    backtrack = BacktrackingLineSearch(targetFunction, interval, xtol=xtol, maxIters=maxIters,
+                                        alpha=0.01, beta=0.5)
     results[i] = backtrack.optimize()
     fevals[i]  = backtrack.fevals
 
@@ -75,9 +78,29 @@ meanFevalsSuccess = np.mean(fevals[mask])
 print("SR: {:.2f}".format( sr))
 print("Fevals: {:.2f}".format( meanFevals))
 print("Fevals Succ: {:.2f}".format( meanFevalsSuccess))
+print(results[mask])
 
 
+# Backtracking Line Search
+print("\nFletcher's Inexact Line Search")
+evaluations = 300
+results = np.empty(evaluations)
+fevals = np.empty(evaluations)
+# solution = 0.10986
+for i in range(evaluations):
+    fletcher = FletcherILS(targetFunction, interval, xtol=xtol, maxIters=maxIters)
+    results[i] = fletcher.optimize()
+    fevals[i]  = fletcher.fevals
 
+mask = np.abs(results - solution) < xtol
+sr = np.mean(np.where(mask, 1, 0))
+meanFevals = np.mean(fevals)
+meanFevalsSuccess = np.mean(fevals[mask])
+
+print("SR: {:.2f}".format( sr))
+print("Fevals: {:.2f}".format( meanFevals))
+print("Fevals Succ: {:.2f}".format( meanFevalsSuccess))
+print(results[mask])
 
 # Algorithm
 # interval = [,]

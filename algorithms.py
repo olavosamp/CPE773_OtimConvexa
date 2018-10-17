@@ -1,5 +1,5 @@
 # import numpy as np
-from autograd import grad
+from autograd import grad, hessian
 import autograd.numpy as np
 from copy import copy
 
@@ -513,13 +513,13 @@ class BacktrackingLineSearch(LineSearch):
         # print("Initial X: ", x)
         self.iter = 1
         gradient = grad_func(x)
+        direction = -np.sign(gradient)
         while self.iter <= self.maxIters:
             # print("Iter: ", self.iter)
             t = 1
             iter2 = 1
 
             # Search direction is minus gradient direction
-            direction = -np.sign(grad_func(x))
             fx = self.evaluate(x)
             while self.evaluate(x + t*direction) > fx + self.alpha*t*gradient*direction:
                 # print("Iter2: ", iter2)
@@ -527,18 +527,121 @@ class BacktrackingLineSearch(LineSearch):
                 iter2 += 1
             x = x + t*direction
             gradient = grad_func(x)
+            direction = -np.sign(gradient)
 
-            if gradient < self.xtol:
+            if np.abs(gradient) < self.xtol:
                 self.xOpt = x
                 return self.xOpt
             else:
                 self.iter += 1
 
-## Inexact Line Search
-# class XXXX(LineSearch):
-#     def __init__(self, costFunc, interval, xtol=1e-8, maxIters=1e3):
-#         super().__init__(costFunc, xtol)
-#
-#         self.maxIters = maxIters
-#         self.epsilon = xtol/4
-#         self.interval = interval
+# Fletcher Inexact Line Search
+class FletcherILS(LineSearch):
+    def __init__(self, costFunc, interval, xtol=1e-8, maxIters=1e3, initialX=None):
+        super().__init__(costFunc, xtol)
+
+        self.maxIters = maxIters
+        self.epsilon = xtol/4
+        self.interval = np.array(interval)
+
+        if initialX is None:
+            self.initialX = np.random.uniform(self.interval[0, :], self.interval[1, :])
+        else:
+            self.initialX = initialX
+
+        self.rho = 0.1
+        self.sigma = 0.7
+        self.tau = 0.1
+        self.chi = 9
+        self.alpha_L = 0
+        self.alpha_U = 1e100
+
+    def optimize(self):
+        self.fevals = 0
+        self.grad_func = grad(self.evaluate)
+        self.hess_func = hessian(self.evaluate)
+
+        xk = self.initialX
+        self.dk = -self.grad_func(xk)
+        # print("Initial X: ", xk)
+        self.alpha0List = []
+        self.iter = 0
+        while self.iter <= self.maxIters:
+            print("Iter: ", self.iter)
+            self.alpha_0 = self.inexact_line_search(xk)
+            xk = np.clip(xk + self.alpha_0*self.dk, self.interval[0], self.interval[1])
+
+            self.alpha0List.append(self.alpha_0)
+
+            gradient = self.grad_func(xk)
+            if np.linalg.norm(gradient, ord=1) < self.xtol:
+                self.xOpt = x
+                return self.xOpt
+            else:
+                self.dk = -self.grad_func(xk)    # Compute new direction
+                self.iter += 1
+
+    def inexact_line_search(self, xk):
+        # Step1
+        gk = self.grad_func(xk + self.alpha_L*self.dk)
+        # Step 2
+        fL = self.evaluate(xk + self.alpha_L*self.dk)
+        fL_grad = np.dot(gk,self.dk)
+        # print(gk)
+        # print(self.dk)
+        # print(fL_grad)
+        # input()
+
+        # Step 3
+        g0 = self.grad_func(xk)
+        H0 = self.hess_func(xk)
+        self.alpha_0 = (np.linalg.norm(g0, ord=2)**2)/(g0.T @ H0 @ g0)
+        print(self.alpha_0)
+        if np.isnan(self.alpha_0):
+            input()
+        iter2 = 0
+        while iter2 <= self.maxIters:
+            print("Iter2 int: ", iter2)
+            # Step 4
+            f0 = self.evaluate(xk + self.alpha_0*self.dk)
+
+            # Step 5 (Interpolation)
+            if f0 > fL + self.rho*(self.alpha_0 - self.alpha_L)*fL_grad:
+                self.alpha_0_estim = self.alpha_0
+                if self.alpha_0 < self.alpha_U:
+                    self.alpha_0_estim = self.alpha_L + ((self.alpha_0 - self.alpha_L)**2)*fL_grad/(2*(fL - f0 + (self.alpha_0 - self.alpha_L)*fL_grad))
+
+                if self.alpha_0_estim < self.alpha_L + self.tau*(self.alpha_U - self.alpha_L):
+                    self.alpha_0_estim = self.alpha_L + self.tau*(self.alpha_U - self.alpha_L)
+                if self.alpha_0_estim > self.alpha_U - self.tau*(self.alpha_U - self.alpha_L):
+                    self.alpha_0_estim = self.alpha_U - self.tau*(self.alpha_U - self.alpha_L)
+
+                self.alpha_0 = self.alpha_0_estim
+                iter2 += 1
+                continue
+
+            # Step 6
+            f0_grad = np.dot(self.grad_func(xk + self.alpha_0*self.dk), self.dk)
+
+            # Step 7 (Extrapolation)
+            if f0_grad < self.sigma*fL_grad:
+                print("Iter2 ex: ", iter2)
+                input()
+
+                deltaAlpha0 = (self.alpha_0 - self.alphaL)*f0_grad/(fL_grad - f0_grad)
+                if deltaAlpha0 < self.tau*(self.alpha_0 - self.alphaL):
+                    deltaAlpha0 = self.tau*(self.alpha_0 - self.alphaL)
+                if deltaAlpha0 > self.chi*(self.alpha_0 - self.alphaL):
+                    deltaAlpha0 = self.chi*(self.alpha_0 - self.alphaL)
+                self.alpha_0_estim = self.alpha_0 + deltaAlpha0
+                self.alpha_L = self.alpha_0
+                self.alpha_0 = self.alpha_0_estim
+                fL = f0
+                fL_grad = f0_grad
+                iter2 += 1
+                continue
+            # If neither Interpolation nor Extrapolation conditions are met,
+            # convergence has been reached. Terminate Line Search.
+            break
+        # Step 8
+        return self.alpha_0
