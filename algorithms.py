@@ -567,19 +567,24 @@ class FletcherILS(LineSearch):
         self.alpha0List = []
         self.iter = 0
         while self.iter <= self.maxIters:
-            print("Iter: ", self.iter)
+            # print("Iter: ", self.iter)
             self.alpha_0 = self.inexact_line_search(xk)
-            xk = np.clip(xk + self.alpha_0*self.dk, self.interval[0], self.interval[1])
+            # xk = np.clip(xk + self.alpha_0*self.dk, self.interval[0], self.interval[1])
+            xk = xk + self.alpha_0*self.dk
 
             self.alpha0List.append(self.alpha_0)
 
             gradient = self.grad_func(xk)
-            if np.linalg.norm(gradient, ord=1) < self.xtol:
-                self.xOpt = x
+            if np.linalg.norm(gradient) <= self.xtol:
+                self.xOpt = xk
                 return self.xOpt
             else:
                 self.dk = -self.grad_func(xk)    # Compute new direction
                 self.iter += 1
+                
+        print("Algorithm did not converge")
+        self.xOpt = xk
+        return self.xOpt
 
     def inexact_line_search(self, xk):
         # Step1
@@ -595,13 +600,13 @@ class FletcherILS(LineSearch):
         # Step 3
         g0 = self.grad_func(xk)
         H0 = self.hess_func(xk)
-        self.alpha_0 = (np.linalg.norm(g0, ord=2)**2)/(g0.T @ H0 @ g0)
-        print(self.alpha_0)
+        self.alpha_0 = (np.linalg.norm(g0, ord=2))/(g0.T @ H0 @ g0)
+        # print(self.alpha_0)
         if np.isnan(self.alpha_0):
             input()
         iter2 = 0
         while iter2 <= self.maxIters:
-            print("Iter2 int: ", iter2)
+            # print("Iter2 int: ", iter2)
             # Step 4
             f0 = self.evaluate(xk + self.alpha_0*self.dk)
 
@@ -625,14 +630,14 @@ class FletcherILS(LineSearch):
 
             # Step 7 (Extrapolation)
             if f0_grad < self.sigma*fL_grad:
-                print("Iter2 ex: ", iter2)
-                input()
+                # print("Iter2 ex: ", iter2)
+                # input()
 
-                deltaAlpha0 = (self.alpha_0 - self.alphaL)*f0_grad/(fL_grad - f0_grad)
-                if deltaAlpha0 < self.tau*(self.alpha_0 - self.alphaL):
-                    deltaAlpha0 = self.tau*(self.alpha_0 - self.alphaL)
-                if deltaAlpha0 > self.chi*(self.alpha_0 - self.alphaL):
-                    deltaAlpha0 = self.chi*(self.alpha_0 - self.alphaL)
+                deltaAlpha0 = (self.alpha_0 - self.alpha_L)*f0_grad/(fL_grad - f0_grad)
+                if deltaAlpha0 < self.tau*(self.alpha_0 - self.alpha_L):
+                    deltaAlpha0 = self.tau*(self.alpha_0 - self.alpha_L)
+                if deltaAlpha0 > self.chi*(self.alpha_0 - self.alpha_L):
+                    deltaAlpha0 = self.chi*(self.alpha_0 - self.alpha_L)
                 self.alpha_0_estim = self.alpha_0 + deltaAlpha0
                 self.alpha_L = self.alpha_0
                 self.alpha_0 = self.alpha_0_estim
