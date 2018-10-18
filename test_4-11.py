@@ -3,7 +3,6 @@ from scipy.optimize import brute
 
 from algorithms import FletcherILS
 from functions import func4
-from vis_functions import
 
 def print_results(alg, string):
     print(string)
@@ -33,6 +32,8 @@ interval = np.array(((-np.pi, -np.pi), (np.pi, np.pi)))
 # Fletcher's Inexact Line Search
 print("\nFletcher's Inexact Line Search")
 initialX = np.array([np.pi, -np.pi])
+initalDir = np.array([1.0, -1.3])
+
 fletcher = FletcherILS(func4, interval, xtol=xtol, maxIters=maxIters, initialX=initialX)
 xOpt = fletcher.optimize()
 print("x* = ", xOpt)

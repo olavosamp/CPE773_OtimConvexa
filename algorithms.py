@@ -537,7 +537,7 @@ class BacktrackingLineSearch(LineSearch):
 
 # Fletcher Inexact Line Search
 class FletcherILS(LineSearch):
-    def __init__(self, costFunc, interval, xtol=1e-8, maxIters=1e3, initialX=None):
+    def __init__(self, costFunc, interval, xtol=1e-8, maxIters=1e3, initialX=None, initialDir=None):
         super().__init__(costFunc, xtol)
 
         self.maxIters = maxIters
@@ -545,14 +545,16 @@ class FletcherILS(LineSearch):
         self.interval = np.array(interval)
 
         if initialX is None:
-            self.initialX = np.random.uniform(self.interval[0, :], self.interval[1, :])
+            self.xk = np.random.uniform(self.interval[0, :], self.interval[1, :])
         else:
-            self.initialX = initialX
+            self.xk = initialX
 
-        self.rho = 0.1
-        self.sigma = 0.7
-        self.tau = 0.1
-        self.chi = 9
+        self.dk = initialDir
+
+        self.rho     = 0.1
+        self.sigma   = 0.7
+        self.tau     = 0.1
+        self.chi     = 9
         self.alpha_L = 0
         self.alpha_U = np.inf
 
@@ -561,36 +563,42 @@ class FletcherILS(LineSearch):
         self.grad_func = grad(self.evaluate)
         self.hess_func = hessian(self.evaluate)
 
-        xk = self.initialX
-        self.dk = -self.grad_func(xk)
-        # print("Initial X: ", xk)
+        if self.dk is None:
+            self.dk = -self.grad_func(self.xk)
+
+        # print("Initial X: ", self.xk)
         self.alpha0List = []
+        self.dirList = []
         self.iter = 0
         while self.iter <= self.maxIters:
-            print("Iter: ", self.iter)
-            self.alpha_0 = self.inexact_line_search(xk)
-            xk = np.clip(xk + self.alpha_0*self.dk, self.interval[0], self.interval[1])
-            # xk = xk + self.alpha_0*self.dk
+            # print("Iter: ", self.iter)
+            # Perform Line Search to compute new alpha_0
+            self.alpha_0 = self.inexact_line_search()
+
+            # Compute new xk (and limit it to search interval)
+            self.xk = np.clip(self.xk + self.alpha_0*self.dk, self.interval[0], self.interval[1])
+            # self.xk = self.xk + self.alpha_0*self.dk
 
             self.alpha0List.append(self.alpha_0)
+            self.dirList.append(self.dk)
 
-            gradient = self.grad_func(xk)
+            gradient = self.grad_func(self.xk)
             if np.linalg.norm(gradient) <= self.xtol:
-                self.xOpt = xk
+                self.xOpt = self.xk
                 return self.xOpt
             else:
-                self.dk = -self.grad_func(xk)    # Compute new direction
+                self.dk = -self.grad_func(self.xk)    # Compute new direction
                 self.iter += 1
 
         print("Algorithm did not converge")
-        self.xOpt = xk
+        self.xOpt = self.xk
         return self.xOpt
 
-    def inexact_line_search(self, xk):
+    def inexact_line_search(self):
         # Step1
-        gk = self.grad_func(xk + self.alpha_L*self.dk)
+        gk = self.grad_func(self.xk + self.alpha_L*self.dk)
         # Step 2
-        fL = self.evaluate(xk + self.alpha_L*self.dk)
+        fL = self.evaluate(self.xk + self.alpha_L*self.dk)
         fL_grad = np.dot(gk,self.dk)
         # print(gk)
         # print(self.dk)
@@ -598,17 +606,17 @@ class FletcherILS(LineSearch):
         # input()
 
         # Step 3
-        g0 = self.grad_func(xk)
-        H0 = self.hess_func(xk)
+        g0 = self.grad_func(self.xk)
+        H0 = self.hess_func(self.xk)
         self.alpha_0 = (np.linalg.norm(g0, ord=2))/(g0.T @ H0 @ g0)
         # print(self.alpha_0)
-        if np.isnan(self.alpha_0):
-            input()
+        # if np.isnan(self.alpha_0):
+        #     input()
         iter2 = 0
         while iter2 <= self.maxIters:
-            print("Iter2 int: ", iter2)
+            # print("Iter2 int: ", iter2)
             # Step 4
-            f0 = self.evaluate(xk + self.alpha_0*self.dk)
+            f0 = self.evaluate(self.xk + self.alpha_0*self.dk)
 
             # Step 5 (Interpolation)
             if f0 > fL + self.rho*(self.alpha_0 - self.alpha_L)*fL_grad:
@@ -626,7 +634,7 @@ class FletcherILS(LineSearch):
                 continue
 
             # Step 6
-            f0_grad = np.dot(self.grad_func(xk + self.alpha_0*self.dk), self.dk)
+            f0_grad = np.dot(self.grad_func(self.xk + self.alpha_0*self.dk), self.dk)
 
             # Step 7 (Extrapolation)
             if f0_grad < self.sigma*fL_grad:
