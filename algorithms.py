@@ -554,7 +554,7 @@ class FletcherILS(LineSearch):
         self.tau = 0.1
         self.chi = 9
         self.alpha_L = 0
-        self.alpha_U = 1e100
+        self.alpha_U = np.inf
 
     def optimize(self):
         self.fevals = 0
@@ -567,10 +567,10 @@ class FletcherILS(LineSearch):
         self.alpha0List = []
         self.iter = 0
         while self.iter <= self.maxIters:
-            # print("Iter: ", self.iter)
+            print("Iter: ", self.iter)
             self.alpha_0 = self.inexact_line_search(xk)
-            # xk = np.clip(xk + self.alpha_0*self.dk, self.interval[0], self.interval[1])
-            xk = xk + self.alpha_0*self.dk
+            xk = np.clip(xk + self.alpha_0*self.dk, self.interval[0], self.interval[1])
+            # xk = xk + self.alpha_0*self.dk
 
             self.alpha0List.append(self.alpha_0)
 
@@ -581,7 +581,7 @@ class FletcherILS(LineSearch):
             else:
                 self.dk = -self.grad_func(xk)    # Compute new direction
                 self.iter += 1
-                
+
         print("Algorithm did not converge")
         self.xOpt = xk
         return self.xOpt
@@ -606,7 +606,7 @@ class FletcherILS(LineSearch):
             input()
         iter2 = 0
         while iter2 <= self.maxIters:
-            # print("Iter2 int: ", iter2)
+            print("Iter2 int: ", iter2)
             # Step 4
             f0 = self.evaluate(xk + self.alpha_0*self.dk)
 

@@ -1,4 +1,5 @@
 results = "../results/"
+figures = "../figures/"
 
 def make_folder(path):
     import os
@@ -9,3 +10,4 @@ def make_folder(path):
         pass
 
 make_folder(results)
+make_folder(figures)
