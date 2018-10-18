@@ -497,7 +497,8 @@ class DSCAlgorithm(LineSearch):
 
 # Backtracking Line Search
 class BacktrackingLineSearch(LineSearch):
-    def __init__(self, costFunc, interval, xtol=1e-8, maxIters=1e3, alpha=0.5, beta=0.3, initialX=None, initialDir=None):
+    def __init__(self, costFunc, interval, xtol=1e-8, maxIters=1e3, alpha=0.5, beta=0.3,
+                initialX=None, initialDir=None):
         super().__init__(costFunc, xtol)
 
         self.maxIters = maxIters
@@ -536,6 +537,8 @@ class BacktrackingLineSearch(LineSearch):
             while self.evaluate(self.x + t*self.direction) > self.fx + self.alpha*t*np.dot(np.transpose(gradient),self.direction):
                 # print("Iter2: ", iter2)
                 t = self.beta*t
+                if t < 0:
+                    t = 1e-4 
                 iter2 += 1
             self.x = self.x + t*self.direction
             gradient = grad_func(self.x)
@@ -544,7 +547,7 @@ class BacktrackingLineSearch(LineSearch):
             self.alphaList.append(t)
             self.dirList.append(self.direction)
 
-            if np.linalg.norm(gradient, ord=1) < self.xtol:
+            if np.linalg.norm(gradient, ord=2) < self.xtol:
                 self.xOpt = self.x
                 return self.xOpt
             else:
@@ -601,7 +604,7 @@ class FletcherILS(LineSearch):
 
             gradient = self.grad_func(self.xk)
             # print("gradient ", gradient)
-            if np.linalg.norm(gradient, ord=1) <= self.xtol:
+            if np.linalg.norm(gradient, ord=2) <= self.xtol:
                 self.xOpt = self.xk
                 return self.xOpt
             else:
@@ -613,6 +616,9 @@ class FletcherILS(LineSearch):
         return self.xOpt
 
     def inexact_line_search(self):
+        self.alpha_L = 0
+        self.alpha_U = np.inf
+
         # Step1
         gk = self.grad_func(self.xk + self.alpha_L*self.dk)
 
@@ -627,7 +633,8 @@ class FletcherILS(LineSearch):
         # Step 3
         g0 = self.grad_func(self.xk)
         H0 = self.hess_func(self.xk)
-        self.alpha_0 = (np.linalg.norm(g0, ord=2)**2)/(np.transpose(g0) @ H0 @ g0)
+        self.alpha_0 = (np.transpose(g0)@ g0)/(np.transpose(g0) @ H0 @ g0)
+        self.alpha_0 = np.clip(self.alpha_0, self.alpha_L, self.alpha_U)
         # print(self.alpha_0)
         # if np.isnan(self.alpha_0):
         #     input()
@@ -643,6 +650,9 @@ class FletcherILS(LineSearch):
             # Step 5 (Interpolation)
             if self.f0 > fL + self.rho*(self.alpha_0 - self.alpha_L)*fL_grad:
                 print("Interpol")
+                # print("alpha0:", self.alpha_0 )
+                # print("alphaL: ", self.alpha_L)
+                # input()
                 if self.alpha_0 < self.alpha_U:
                     self.alpha_U = self.alpha_0
                 self.alpha_0_estim = self.alpha_L + ((self.alpha_0 - self.alpha_L)**2)*fL_grad/(2*(fL - self.f0 + (self.alpha_0 - self.alpha_L)*fL_grad))
@@ -670,6 +680,10 @@ class FletcherILS(LineSearch):
                     deltaAlpha0 = self.tau*(self.alpha_0 - self.alpha_L)
                 if deltaAlpha0 > self.chi*(self.alpha_0 - self.alpha_L):
                     deltaAlpha0 = self.chi*(self.alpha_0 - self.alpha_L)
+                # print(deltaAlpha0)
+                if deltaAlpha0 < 1e-6:
+                    deltaAlpha0 = self.alpha_0
+
                 self.alpha_0_estim = self.alpha_0 + deltaAlpha0
                 self.alpha_L = self.alpha_0
                 self.alpha_0 = self.alpha_0_estim

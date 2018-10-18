@@ -87,6 +87,54 @@ def plot_contour(X, Y, Z, save=True, fig_name="Plot_3D", show=False):
 
     return fig, ax
 
+def plot_line_search(alphaList, initialX, initialDir, func, save=True, fig_name="Line_search_plot", show=False):
+    ## Plot f(x0 + alpha*dir) for ILS
+    interval = [0, 4.8332]
+    numPoints = 100
+
+    alpha = np.linspace(interval[0], interval[1], num=numPoints)
+
+    x = np.zeros((numPoints, 2))
+    y = np.zeros(numPoints)
+    for i in range(numPoints):
+        x[i, :] = initialX + alpha[i]*initialDir
+        y[i] = func(x[i, :])
+
+    alphaLen = np.shape(alphaList)[0]
+    yAlpha = np.zeros(alphaLen)
+    for i in range(alphaLen):
+        yAlpha[i] = func(initialX + alphaList[i]*initialDir)
+
+    fig = plt.plot(alpha, y)
+    alphaBest = alphaList[-1]
+    yBest = func(initialX + alphaBest*initialDir)
+
+    # plt.plot(alphaBest, yBest, 'rx', label='Estimated alpha')
+    plt.plot(alphaList[0], yAlpha[0], 'bo', markersize=8, label='Starting alpha')
+    plt.plot(alphaList[1], yAlpha[1], 'rx', markersize=6, label='Estimated alpha')
+
+    plt.legend()
+
+    fig = plt.gcf()
+    # fig.set_size_inches(26, 26)
+    plt.subplots_adjust(left=0.0, bottom=0.0, right=1.0, top=1.0, wspace=None,
+                        hspace=None)
+
+    plt.title(fig_name.replace("_", " "))
+    plt.xlabel("alpha")
+    plt.ylabel("f(x0 + alpha*dir)")
+
+    if show is True:
+        plt.show()
+
+    # Save plots
+    if (save == 'png') or (save == 'all') or (save is True):
+        fig.savefig(dirs.figures+fig_name+".png", orientation='portrait', bbox_inches='tight')
+    if (save == 'pdf') or (save == 'all') or (save is True):
+        fig.savefig(dirs.figures+fig_name+".pdf", orientation='portrait', bbox_inches='tight')
+
+    return fig
+
 # def plot_evolution(tablePath, save=False, fig_name="auto", show=True):
 #     '''
 #         Plot evolution of error over generations for given results table.

@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import dirs
 from algorithms import FletcherILS, BacktrackingLineSearch
 from functions import func4
-from vis_functions import plot_3d, plot_contour
+from vis_functions import plot_3d, plot_contour, plot_line_search
 
 interval    = [-np.pi, +np.pi]
 numPoints   = 1000
@@ -26,12 +26,12 @@ for i in range(len(X)):
 fig, ax = plot_contour(X, Y, Z, save=False, fig_name="Contour_Plot", show=False)
 
 ## Compute Fletcher's Inexact Line Search
-initialX = np.array([np.pi, -np.pi])
-initalDir = np.array([1.0, -1.3])
+initialX = np.array([-np.pi, +np.pi])
+initialDir = np.array([1.0, -1.1])
 xtol = 1e-5
 maxIters = 500
 
-fletcher = FletcherILS(func4, interval, xtol=xtol, maxIters=maxIters, initialX=initialX)
+fletcher = FletcherILS(func4, interval, xtol=xtol, maxIters=maxIters, initialX=initialX, initialDir=initialDir)
 xOpt = fletcher.optimize()
 
 alphaList = np.array(fletcher.alpha0List)
@@ -49,8 +49,9 @@ for i in range(1, xLen):
 # Clip values to search space: may be cheating
 # xList = np.clip(xList, interval[0], interval[1])
 
-# print(xList)
-# print(np.shape(xList))
+print(xList)
+print(np.shape(xList))
+print(alphaList)
 
 print("x* = ", xList[-1])
 print("f(x*) = ", bestF)
@@ -61,20 +62,18 @@ ax.plot(xList[:,0], xList[:,1], 'rx', markersize=7, label='Line Search', linesty
 fig = plt.gcf()
 ax.set_title("Contour Plot and Fletcher's Inexact Line Search")
 fig.set_size_inches(18, 10)
-fig.legend(loc='upper left')
+fig.legend(loc='upper right')
 fig.savefig(dirs.figures+"Contour_Plot_ILS"+".png", orientation='portrait', bbox_inches='tight')
 
-# plt.show()
+plt.clf()
+plot_line_search(alphaList, initialX, initialDir, func4,fig_name="Line_search_plot_ILS", save='png', show=False)
 
 ## Compute Backtracking Line Search
 print("\nBacktracking Line Search")
-
-initialX = np.array([np.pi, -np.pi])
-initalDir = np.array([1.0, -1.3])
 xtol = 1e-5
 maxIters = 500
 
-backtrack = BacktrackingLineSearch(func4, interval, xtol=xtol, maxIters=maxIters, initialX=initialX)
+backtrack = BacktrackingLineSearch(func4, interval, xtol=xtol, maxIters=maxIters, initialX=initialX, initialDir=initialDir)
 xOpt = backtrack.optimize()
 
 # Backtrack Figure
@@ -83,7 +82,7 @@ fig, ax = plot_contour(X, Y, Z, save=False, fig_name="Contour_Plot", show=False)
 alphaList = np.array(backtrack.alphaList)
 dirList = np.array(backtrack.dirList)
 bestF = backtrack.fx
-# print("alpha: ", alphaList.shape)
+print("alpha: ", alphaList.shape)
 # print("dir: ", dirList.shape)
 xLen = np.shape(alphaList)[0]
 
@@ -107,7 +106,8 @@ ax.plot(xList[:,0], xList[:,1], 'rx', markersize=7, label='Line Search', linesty
 fig = plt.gcf()
 ax.set_title("Contour Plot and Backtracking Line Search")
 fig.set_size_inches(18, 10)
-fig.legend(loc='upper left')
+fig.legend(loc='upper right')
 fig.savefig(dirs.figures+"Contour_Plot_BT"+".png", orientation='portrait', bbox_inches='tight')
 
-# plt.show()
+plt.clf()
+plot_line_search(alphaList, initialX, initialDir, func4, fig_name="Line_search_plot_BT", save='png', show=False)
