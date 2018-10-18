@@ -36,13 +36,14 @@ print("alpha: ", alphaList.shape)
 print("dir: ", dirList.shape)
 xLen = np.shape(alphaList)[0]
 
-xList = np.zeros((xLen+1, 2))
+xList = np.zeros((xLen, 2))
 xList[0] = initialX
 for i in range(1, xLen):
     xList[i] = xList[i-1] + alphaList[i]*dirList[i]
 
 print(xList)
 print(np.shape(xList))
-#
-# ax.plot(initialX, 'rx')
-# plt.show()
+
+ax.plot(xList[0], 'rx')
+ax.plot(xList[1], 'ro')
+plt.show()

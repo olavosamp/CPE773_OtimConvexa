@@ -571,18 +571,22 @@ class FletcherILS(LineSearch):
         self.dirList = []
         self.iter = 0
         while self.iter <= self.maxIters:
-            # print("Iter: ", self.iter)
+            print("Iter: ", self.iter)
             # Perform Line Search to compute new alpha_0
             self.alpha_0 = self.inexact_line_search()
 
             # Compute new xk (and limit it to search interval)
-            self.xk = np.clip(self.xk + self.alpha_0*self.dk, self.interval[0], self.interval[1])
-            # self.xk = self.xk + self.alpha_0*self.dk
+            # self.xk = np.clip(self.xk + self.alpha_0*self.dk, self.interval[0], self.interval[1])
+            self.xk = self.xk + self.alpha_0*self.dk
+            print("alpha_0: ", self.alpha_0)
+            print("direction", self.dk)
+
 
             self.alpha0List.append(self.alpha_0)
             self.dirList.append(self.dk)
 
             gradient = self.grad_func(self.xk)
+            print("gradient ", gradient)
             if np.linalg.norm(gradient) <= self.xtol:
                 self.xOpt = self.xk
                 return self.xOpt
@@ -599,7 +603,7 @@ class FletcherILS(LineSearch):
         gk = self.grad_func(self.xk + self.alpha_L*self.dk)
         # Step 2
         fL = self.evaluate(self.xk + self.alpha_L*self.dk)
-        fL_grad = np.dot(gk,self.dk)
+        fL_grad = np.dot(gk, self.dk)
         # print(gk)
         # print(self.dk)
         # print(fL_grad)
@@ -608,7 +612,7 @@ class FletcherILS(LineSearch):
         # Step 3
         g0 = self.grad_func(self.xk)
         H0 = self.hess_func(self.xk)
-        self.alpha_0 = (np.linalg.norm(g0, ord=2))/(g0.T @ H0 @ g0)
+        self.alpha_0 = (np.linalg.norm(g0, ord=2)**2)/(np.transpose(g0) @ H0 @ g0)
         # print(self.alpha_0)
         # if np.isnan(self.alpha_0):
         #     input()
@@ -620,9 +624,10 @@ class FletcherILS(LineSearch):
 
             # Step 5 (Interpolation)
             if f0 > fL + self.rho*(self.alpha_0 - self.alpha_L)*fL_grad:
-                self.alpha_0_estim = self.alpha_0
+                print("Interpol")
                 if self.alpha_0 < self.alpha_U:
-                    self.alpha_0_estim = self.alpha_L + ((self.alpha_0 - self.alpha_L)**2)*fL_grad/(2*(fL - f0 + (self.alpha_0 - self.alpha_L)*fL_grad))
+                    self.alpha_U = self.alpha_0
+                self.alpha_0_estim = self.alpha_L + ((self.alpha_0 - self.alpha_L)**2)*fL_grad/(2*(fL - f0 + (self.alpha_0 - self.alpha_L)*fL_grad))
 
                 if self.alpha_0_estim < self.alpha_L + self.tau*(self.alpha_U - self.alpha_L):
                     self.alpha_0_estim = self.alpha_L + self.tau*(self.alpha_U - self.alpha_L)
@@ -638,8 +643,8 @@ class FletcherILS(LineSearch):
 
             # Step 7 (Extrapolation)
             if f0_grad < self.sigma*fL_grad:
-                # print("Iter2 ex: ", iter2)
-                # input()
+                print("Extrapol")
+                input()
 
                 deltaAlpha0 = (self.alpha_0 - self.alpha_L)*f0_grad/(fL_grad - f0_grad)
                 if deltaAlpha0 < self.tau*(self.alpha_0 - self.alpha_L):
