@@ -538,7 +538,7 @@ class BacktrackingLineSearch(LineSearch):
                 # print("Iter2: ", iter2)
                 t = self.beta*t
                 if t < 0:
-                    t = 1e-4 
+                    t = 1e-4
                 iter2 += 1
             self.x = self.x + t*self.direction
             gradient = grad_func(self.x)
@@ -547,11 +547,18 @@ class BacktrackingLineSearch(LineSearch):
             self.alphaList.append(t)
             self.dirList.append(self.direction)
 
-            if np.linalg.norm(gradient, ord=2) < self.xtol:
-                self.xOpt = self.x
-                return self.xOpt
+            if np.ndim(gradient) > 1:
+                if np.linalg.norm(gradient, ord=2) < self.xtol:
+                    self.xOpt = self.x
+                    return self.xOpt
+                else:
+                    self.iter += 1
             else:
-                self.iter += 1
+                if np.abs(gradient) < self.xtol:
+                    self.xOpt = self.x
+                    return self.xOpt
+                else:
+                    self.iter += 1
 
 # Fletcher Inexact Line Search
 class FletcherILS(LineSearch):
