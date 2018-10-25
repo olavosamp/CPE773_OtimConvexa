@@ -3,7 +3,7 @@ from scipy.optimize import brute
 import matplotlib.pyplot as plt
 
 import dirs
-from algorithms import FletcherILS, BacktrackingLineSearch
+from line_search import FletcherILS, BacktrackingLineSearch
 from functions import func4
 from vis_functions import plot_3d, plot_contour, plot_line_search
 
@@ -38,7 +38,7 @@ alphaList = np.array(fletcher.alpha0List)
 dirList = np.array(fletcher.dirList)
 bestF = fletcher.f0
 # print("alpha: ", alphaList.shape)
-# print("dir: ", dirList.shape)
+# print("dir: ", dirListline_search
 xLen = np.shape(alphaList)[0]
 
 xList = np.zeros((xLen, 2))

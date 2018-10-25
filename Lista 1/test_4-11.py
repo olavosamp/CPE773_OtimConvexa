@@ -1,7 +1,7 @@
 import autograd.numpy as np
 from scipy.optimize import brute
 
-from algorithms import FletcherILS
+from line_search import FletcherILS
 from functions import func4
 
 def print_results(alg, string):

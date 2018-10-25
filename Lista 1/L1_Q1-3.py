@@ -5,7 +5,7 @@ from   tqdm   import tqdm
 from scipy.optimize import brute
 
 import dirs
-from algorithms import *#(DichotomousSearch, FibonacciSearch,GoldenSectionSearch,
+from line_search import *#(DichotomousSearch, FibonacciSearch,GoldenSectionSearch,
                         #QuadraticInterpolation)
 from functions import poly1, func2, func3
 
@@ -34,7 +34,6 @@ savePath = dirs.results+"L1_Q_4-2_"
 
 maxIters        = int(1e3)
 xtol            = 1e-5
-# xSolution       = 0.10986
 runtimeEvals    = 10
 stochasticEvals = 500
 
@@ -112,5 +111,4 @@ print(results)
 
 savePath += "results_table.xlsx"
 print("Table1 saved at\n{}\n".format(savePath))
-# results.to_excel(savePath, float_format="%.6f")
 results.to_excel(savePath)

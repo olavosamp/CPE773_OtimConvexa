@@ -15,8 +15,6 @@ def func2(x):
         x = 9.9
 
     value = np.log(x - 2)**2 + np.log(10 - x)**2 - x**0.2
-    # if np.isnan(value):
-    #     return np.inf
 
     return value
 

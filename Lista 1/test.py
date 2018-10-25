@@ -1,6 +1,6 @@
 import numpy as np
 
-from algorithms import *#(DichotomousSearch, FibonacciSearch,GoldenSectionSearch,
+from line_search import *#(DichotomousSearch, FibonacciSearch,GoldenSectionSearch,
                         #QuadraticInterpolation)
 from functions import poly1, func2, func3
 from scipy.optimize import brute
