@@ -3,6 +3,8 @@ from autograd import grad, hessian
 import autograd.numpy as np
 from copy import copy
 
+from libs.operators import norm2
+
 class LineSearch:
     def __init__(self, costFunc, xtol):
         self.costFunc = costFunc
@@ -554,7 +556,7 @@ class BacktrackingLineSearch(LineSearch):
                 else:
                     self.iter += 1
             else:
-                if np.abs(gradient) < self.xtol:
+                if norm2(gradient) < self.xtol:
                     self.xOpt = self.x
                     return self.xOpt
                 else:

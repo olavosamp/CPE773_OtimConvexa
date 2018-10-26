@@ -4,10 +4,11 @@ import pandas as pd
 from   tqdm   import tqdm
 from scipy.optimize import brute
 
-import dirs
-from line_search import *#(DichotomousSearch, FibonacciSearch,GoldenSectionSearch,
+
+import libs.dirs as dirs
+from libs.line_search import *#(DichotomousSearch, FibonacciSearch,GoldenSectionSearch,
                         #QuadraticInterpolation)
-from functions import poly1, func2, func3
+from libs.functions import poly1, func2, func3
 
 algList = [(brute, "Brute Force"),
             (DichotomousSearch, "Dichotomous Search"),

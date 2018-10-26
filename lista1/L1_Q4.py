@@ -2,10 +2,10 @@ import autograd.numpy as np
 from scipy.optimize import brute
 import matplotlib.pyplot as plt
 
-import dirs
-from line_search import FletcherILS, BacktrackingLineSearch
-from functions import func4
-from vis_functions import plot_3d, plot_contour, plot_line_search
+from libs import dirs
+from libs.line_search import FletcherILS, BacktrackingLineSearch
+from libs.functions import func4
+from libs.vis_functions import plot_3d, plot_contour, plot_line_search
 
 interval    = [-np.pi, +np.pi]
 numPoints   = 1000
@@ -18,6 +18,7 @@ Z = np.zeros((len(X), len(Y)))
 for i in range(len(X)):
     for j in range(len(Y)):
         Z[i,j] = func4([X[i,j], Y[i,j]])
+
 
 # 3D Plot
 # plot_3d(X, Y, Z, save='png', fig_name="3D_Plot", show=True)

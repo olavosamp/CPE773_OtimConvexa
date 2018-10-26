@@ -1,8 +1,8 @@
 import numpy as np
 
-from line_search import *#(DichotomousSearch, FibonacciSearch,GoldenSectionSearch,
+from libs.line_search import *#(DichotomousSearch, FibonacciSearch,GoldenSectionSearch,
                         #QuadraticInterpolation)
-from functions import poly1, func2, func3
+from libs.functions import poly1, func2, func3
 from scipy.optimize import brute
 
 def print_results(alg, string):

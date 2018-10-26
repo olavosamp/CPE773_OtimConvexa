@@ -3,7 +3,7 @@ import numpy                as np
 import matplotlib.pyplot    as plt
 from mpl_toolkits.mplot3d   import Axes3D
 
-import dirs
+import libs.dirs as dirs
 # import defs
 
 def plot_3d(X, Y, Z, save=True, fig_name="Plot_3D", show=False):

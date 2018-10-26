@@ -1,8 +1,8 @@
 import autograd.numpy as np
 from scipy.optimize import brute
 
-from line_search import FletcherILS
-from functions import func4
+from libs.line_search import FletcherILS
+from libs.functions import func4
 
 def print_results(alg, string):
     print(string)
@@ -39,7 +39,7 @@ xOpt = fletcher.optimize()
 print("x* = ", xOpt)
 print("Fevals: ", fletcher.fevals)
 print("xtol: ", xtol)
-
+print("maza end")
 # # Fletcher's Inexact Line Search (Stochastic)
 # print("\nFletcher's Inexact Line Search")
 # evaluations = 300
