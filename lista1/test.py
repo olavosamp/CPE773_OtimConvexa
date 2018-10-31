@@ -81,7 +81,7 @@ print("Fevals Succ: {:.2f}".format( meanFevalsSuccess))
 print(results[mask])
 
 
-# Backtracking Line Search
+# Fletcher's Inexact Line Search
 print("\nFletcher's Inexact Line Search")
 evaluations = 300
 results = np.empty(evaluations)

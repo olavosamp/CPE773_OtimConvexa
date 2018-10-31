@@ -594,7 +594,7 @@ class FletcherILS(LineSearch):
             self.dk = -self.grad_func(self.xk)
 
         # print("Initial X: ", self.xk)
-        self.alpha0List = []
+        self.alphaList = []
         self.dirList = []
         self.iter = 0
         while self.iter <= self.maxIters:
@@ -605,7 +605,7 @@ class FletcherILS(LineSearch):
             # Compute new xk (and limit it to search interval)
             self.xk = self.xk + self.alpha_0*self.dk
 
-            self.alpha0List.append(self.alpha_0)
+            self.alphaList.append(self.alpha_0)
             self.dirList.append(self.dk)
 
             gradient = self.grad_func(self.xk)

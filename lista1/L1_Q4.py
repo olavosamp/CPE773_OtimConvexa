@@ -83,7 +83,7 @@ fig, ax = plot_contour(X, Y, Z, save=False, fig_name="Contour_Plot", show=False)
 alphaList = np.array(backtrack.alphaList)
 dirList = np.array(backtrack.dirList)
 bestF = backtrack.fx
-print("alpha: ", alphaList.shape)
+print("alpha shape: ", alphaList.shape)
 # print("dir: ", dirList.shape)
 xLen = np.shape(alphaList)[0]
 
