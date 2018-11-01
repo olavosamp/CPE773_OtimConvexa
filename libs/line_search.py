@@ -421,7 +421,7 @@ class DSCAlgorithm(LineSearch):
 
 # Backtracking Line Search
 class BacktrackingLineSearch(LineSearch):
-    def __init__(self, costFunc, interval, xtol=1e-8, maxIters=1e3, alpha=0.4, beta=0.9,
+    def __init__(self, costFunc, interval, xtol=1e-8, maxIters=1e3, alpha=0.5, beta=0.5,
                 initialX=None, initialDir=None):
         super().__init__(costFunc, xtol)
 
@@ -446,13 +446,13 @@ class BacktrackingLineSearch(LineSearch):
         gradient = grad_func(self.x)
 
         if self.direction is None:
-            # self.direction = -np.sign(gradient)
-            self.direction = -gradient
+            self.direction = -np.sign(gradient)
+            # self.direction = -gradient
         self.dirList = []
         self.alphaList = []
 
         while self.iter <= self.maxIters:
-            print("Iter: ", self.iter)
+            # print("LS Iter: ", self.iter)
             t = 10
 
             iter2 = 1
@@ -461,11 +461,10 @@ class BacktrackingLineSearch(LineSearch):
             self.fx = self.evaluate(self.x)
 
             # Actual Backtracking Line Search
-            while self.evaluate(self.x + t*self.direction) > self.fx + self.alpha*t*(np.transpose(gradient) @ self.direction):
-                print("Iter2: ", iter2)
+            while (self.evaluate(self.x + t*self.direction) > self.fx + self.alpha*t*(np.transpose(gradient) @ self.direction)) and (iter2 < self.maxIters):
+                # print("Iter2: ", iter2)
                 t = self.beta*t
-                # if t < 0:
-                #     t = 1e-4
+                t = np.clip(t, 2*self.xtol, None)
                 iter2 += 1
             self.x = self.x + t*self.direction
             gradient = grad_func(self.x)
@@ -473,22 +472,33 @@ class BacktrackingLineSearch(LineSearch):
             self.dirList.append(self.direction)
             self.alphaList.append(t)
 
-            # self.direction = -np.sign(gradient)
-            self.direction = -gradient
+            if np.isnan(self.x).any() or np.isnan(gradient).any():
+                print("\nBacktracking diverged.")
+                print("x: ", self.x)
+                print("Grad(x): ", gradient)
+                return self.x
+
+            self.direction = -np.sign(gradient)
+            # self.direction = -gradient
 
 
-            if np.ndim(gradient) > 1:
-                if np.linalg.norm(gradient, ord=2) < self.xtol:
-                    self.xOpt = self.x
-                    return self.xOpt
-                else:
-                    self.iter += 1
+            # if np.ndim(gradient) > 1:
+                # print("dim>1")
+            if np.linalg.norm(gradient, ord=2) < self.xtol:
+                self.xOpt = self.x
+                return self.xOpt
             else:
-                if norm2(gradient) < self.xtol:
-                    self.xOpt = self.x
-                    return self.xOpt
-                else:
-                    self.iter += 1
+                self.iter += 1
+            # else:
+            #     # print("dim = 1")
+            #     if norm2(gradient) < self.xtol:
+            #         self.xOpt = self.x
+            #         return self.xOpt
+            #     else:
+            #         self.iter += 1
+        print("Algorithm did not converge.")
+        self.xOpt = self.x
+        return self.xOpt
 
 # Fletcher Inexact Line Search
 class FletcherILS(LineSearch):

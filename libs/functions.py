@@ -30,10 +30,12 @@ def func4(x):
     xLen = np.shape(x)[0]
     if xLen < 2:
         raise ValueError("Input dimensions doesn't match. Expected 2, received {}.".format(xLen))
-    return 0.7*(np.power(x[0], 4)) - 8*(np.power(x[0], 2)) + 6*(np.power(x[1], 2)) + np.cos(x[0]*x[1]) - 8*x[0]
+    else:
+        return 0.7*(np.power(x[0], 4)) - 8*(np.power(x[0], 2)) + 6*(np.power(x[1], 2)) + np.cos(x[0]*x[1]) - 8*x[0]
 
 def func5(x):
     xLen = np.shape(x)[0]
     if xLen < 2:
         raise ValueError("Input dimensions doesn't match. Expected 2, received {}.".format(xLen))
-    return (x[0]**2 + x[1]**2 - 1**2)**2 + (x[0] + x[1] - 1)**2
+    else:
+        return (x[0]**2 + x[1]**2 - 1**2)**2 + (x[0] + x[1] - 1)**2
