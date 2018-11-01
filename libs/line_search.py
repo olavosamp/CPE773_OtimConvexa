@@ -341,84 +341,6 @@ class CubicInterpolation(LineSearch):
             self.iter += 1
             # input()
 
-# class CubicInterpolation(LineSearch):
-#     def __init__(self, costFunc, interval, xtol=1e-8, maxIters=1e3):
-#         super().__init__(costFunc, xtol)
-#
-#         self.maxIters = maxIters
-#         self.epsilon  = xtol/4
-#         self.interval = interval
-#         self.iter = 0
-#
-#     def get_coeficients(self, x, fList, f1_grad):
-#         beta  = (fList[1] - fList[0] + f1_grad*(x[1] - x[2]))/((x[1] - x[2])**2)
-#         gamma = (fList[2] - fList[0] + f1_grad*(x[1] - x[3]))/((x[1] - x[3])**2)
-#         theta = (2*(x[1]**2) - x[2]*(x[1] + x[2]))/(x[1] - x[2])
-#         psi   = (2*(x[1]**2) - x[3]*(x[1] + x[3]))/(x[1] - x[3])
-#
-#         a3 = (beta - gamma)/(theta - psi)
-#         a2 = beta - theta*a3
-#         a1 = f1_grad - 2*a2*x[1] - 3*a3*(x[1]**2)
-#         return beta, gamma, theta, psi, a1, a2, a3
-#
-#     def get_extremum_points(self, a1, a2, a3):
-#         extremPos = (1/(3*a3))*(-a2 + np.sqrt(a2**2 - 3*a1*a3))
-#         extremNeg = (1/(3*a3))*(-a2 - np.sqrt(a2**2 - 3*a1*a3))
-#
-#         return extremPos, extremNeg
-#
-#     def select_extremum(self, extremPos, extremNeg, a2, a3):
-#         if extremPos > (-a2/(3*a3)):
-#             xTest = extremPos
-#         elif extremNeg > (-a2/(3*a3)):
-#             xTest = extremNeg
-#         else:
-#             raise ValueError("Calculation error on xTest")
-#         return xTest
-#
-#
-#     def optimize(self):
-#         self.fevals = 0
-#         grad_func = grad(self.evaluate)
-#
-#         x = np.zeros(4)
-#         fList = np.zeros(3)
-#         # STEP 1
-#         x[0] = np.inf
-#         x[1] = self.interval[0]
-#         x[3] = self.interval[1]
-#         x[2] = (x[1] + x[3])/2
-#         # STEP 2
-#         fList[0] = self.evaluate(x[1])
-#         fList[1] = self.evaluate(x[2])
-#         fList[2] = self.evaluate(x[3])
-#         f1_grad  = copy(grad_func(x[1]))
-#         # STEP 3
-#         while self.iter <= self.maxIters:
-#             beta, gamma, theta, psi, a1, a2, a3 = self.get_coeficients(x, fList, f1_grad)
-#
-#             extremPos, extremNeg = self.get_extremum_points(a1, a2, a3)
-#
-#             xTest = self.select_extremum(extremPos, extremNeg, a2, a3)
-#
-#             # STEP 4
-#             if np.abs(xTest - x[0]) < self.xtol:
-#                 self.xOpt = xTest
-#                 return self.xOpt
-#
-#             fTest = self.evaluate(xTest)
-#
-#             # STEP 5
-#             m = np.argmax(fList)
-#             x[0] = xTest
-#             x[m+1] = xTest
-#             fList[m] = fTest
-#
-#             if m == 0:
-#                 f1_grad = copy(grad_func(xTest))
-#
-#             self.iter += 1
-
 
 # Davies-Swann-Campey Algorithm
 class DSCAlgorithm(LineSearch):
@@ -499,15 +421,14 @@ class DSCAlgorithm(LineSearch):
 
 # Backtracking Line Search
 class BacktrackingLineSearch(LineSearch):
-    def __init__(self, costFunc, interval, xtol=1e-8, maxIters=1e3, alpha=0.5, beta=0.3,
+    def __init__(self, costFunc, interval, xtol=1e-8, maxIters=1e3, alpha=0.4, beta=0.9,
                 initialX=None, initialDir=None):
         super().__init__(costFunc, xtol)
 
         self.maxIters = maxIters
-        self.epsilon = xtol/4
         self.interval = interval
-        self.alpha = alpha    # alpha in ]0.0, 0.5[
-        self.beta  = beta     # beta in ]0.0, 1.0[
+        self.alpha    = alpha    # alpha in ]0.0, 0.5[
+        self.beta     = beta     # beta in ]0.0, 1.0[
 
         if initialX is None:
             self.x = np.random.uniform(self.interval[0], self.interval[1])
@@ -522,32 +443,39 @@ class BacktrackingLineSearch(LineSearch):
         # print("Initial X: ", self.x)
         self.iter = 1
 
-        self.alphaList = []
-        self.dirList = []
         gradient = grad_func(self.x)
 
         if self.direction is None:
-            self.direction = -np.sign(gradient)
+            # self.direction = -np.sign(gradient)
+            self.direction = -gradient
+        self.dirList = []
+        self.alphaList = []
 
         while self.iter <= self.maxIters:
-            # print("Iter: ", self.iter)
-            t = 1
+            print("Iter: ", self.iter)
+            t = 10
+
             iter2 = 1
 
             # Search direction is minus gradient direction
             self.fx = self.evaluate(self.x)
-            while self.evaluate(self.x + t*self.direction) > self.fx + self.alpha*t*np.dot(np.transpose(gradient),self.direction):
-                # print("Iter2: ", iter2)
+
+            # Actual Backtracking Line Search
+            while self.evaluate(self.x + t*self.direction) > self.fx + self.alpha*t*(np.transpose(gradient) @ self.direction):
+                print("Iter2: ", iter2)
                 t = self.beta*t
-                if t < 0:
-                    t = 1e-4
+                # if t < 0:
+                #     t = 1e-4
                 iter2 += 1
             self.x = self.x + t*self.direction
             gradient = grad_func(self.x)
-            self.direction = -np.sign(gradient)
 
-            self.alphaList.append(t)
             self.dirList.append(self.direction)
+            self.alphaList.append(t)
+
+            # self.direction = -np.sign(gradient)
+            self.direction = -gradient
+
 
             if np.ndim(gradient) > 1:
                 if np.linalg.norm(gradient, ord=2) < self.xtol:

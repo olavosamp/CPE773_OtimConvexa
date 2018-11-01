@@ -47,7 +47,7 @@ def plot_3d(X, Y, Z, save=True, fig_name="Plot_3D", show=False):
 
     return fig, ax
 
-def plot_contour(X, Y, Z, save=True, fig_name="Plot_3D", show=False):
+def plot_contour(X, Y, Z, save=True, fig_name="Plot_3D", num_contours=16, show=False):
     '''
         Plot contour of 3D function (input dimension of 2).
 
@@ -65,7 +65,7 @@ def plot_contour(X, Y, Z, save=True, fig_name="Plot_3D", show=False):
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
-    ax.contour(X, Y, Z, 8)
+    ax.contour(X, Y, Z, num_contours)
 
     ax.set_title("Contour Plot")
 
@@ -87,9 +87,10 @@ def plot_contour(X, Y, Z, save=True, fig_name="Plot_3D", show=False):
 
     return fig, ax
 
-def plot_line_search(alphaList, initialX, initialDir, func, save=True, fig_name="Line_search_plot", show=False):
+def plot_line_search(alphaList, initialAlpha, initialX, initialDir, func, save=True, fig_name="Line_search_plot", show=False):
     ## Plot f(x0 + alpha*dir) for ILS
-    interval = [0, 4.8332]
+    # interval = [0, 4.8332]
+    interval = [0, 5.7120]
     numPoints = 100
 
     alpha = np.linspace(interval[0], interval[1], num=numPoints)
@@ -101,17 +102,18 @@ def plot_line_search(alphaList, initialX, initialDir, func, save=True, fig_name=
         y[i] = func(x[i, :])
 
     alphaLen = np.shape(alphaList)[0]
-    yAlpha = np.zeros(alphaLen)
+    yAlpha = np.zeros(alphaLen+1)
+    yAlpha[0] = func(initialX + initialAlpha*initialDir)
     for i in range(alphaLen):
-        yAlpha[i] = func(initialX + alphaList[i]*initialDir)
+        yAlpha[i+1] = func(initialX + alphaList[i]*initialDir)
 
     fig = plt.plot(alpha, y)
     alphaBest = alphaList[-1]
     yBest = func(initialX + alphaBest*initialDir)
 
     # plt.plot(alphaBest, yBest, 'rx', label='Estimated alpha')
-    plt.plot(alphaList[0], yAlpha[0], 'bo', markersize=8, label='Starting alpha')
-    plt.plot(alphaList[1], yAlpha[1], 'rx', markersize=6, label='Estimated alpha')
+    plt.plot(initialAlpha, yAlpha[0], 'bo', markersize=8, label='Starting alpha')
+    plt.plot(alphaList[0], yAlpha[1], 'rx', markersize=6, label='Estimated alpha')
 
     plt.legend()
 
