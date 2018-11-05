@@ -428,7 +428,7 @@ class BacktrackingLineSearch(LineSearch):
         self.maxIters = maxIters
         self.interval = interval
         self.alpha    = alpha    # alpha in ]0.0, 0.5[
-        self.beta     = beta     # beta in ]0.0, 1.0[
+        self.beta     = beta     # beta  in ]0.0, 1.0[
 
         if initialX is None:
             self.x = np.random.uniform(self.interval[0], self.interval[1])

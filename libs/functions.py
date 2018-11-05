@@ -38,4 +38,4 @@ def func5(x):
     if xLen < 2:
         raise ValueError("Input dimensions doesn't match. Expected 2, received {}.".format(xLen))
     else:
-        return (x[0]**2 + x[1]**2 - 1**2)**2 + (x[0] + x[1] - 1)**2
+        return np.power(np.power(x[0], 2) + np.power(x[1], 2) -1, 2) + np.power(x[0] + x[1] - 1, 2)

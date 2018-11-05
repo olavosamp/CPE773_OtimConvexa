@@ -10,6 +10,8 @@ maxItersLS = 200
 function   = func5
 interval   = [-1e15, 1e15]
 
+# Q 5.7
+
 initialX = [+4, +4]
 # initialX = [+4, -4]
 # initialX = [-4, +4]
@@ -20,3 +22,5 @@ xOpt, fOpt, fevals = steepest_descent(function, initialX, interval=interval, xto
 print("Optimal X: ", xOpt)
 print("f(x*): ", fOpt)
 print("FEvals: ", fevals)
+
+# Q
