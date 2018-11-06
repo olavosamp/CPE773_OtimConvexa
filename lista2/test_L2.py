@@ -11,15 +11,13 @@ function   = func5
 interval   = [-1e15, 1e15]
 
 # Q 5.7
-
 initialX = [+4, +4]
 # initialX = [+4, -4]
 # initialX = [-4, +4]
 # initialX = [-4, -4]
 
-# xOpt, fOpt, fevals = steepest_descent(function, initialX, interval=interval, xtol=xtol, maxIters=maxIters, maxItersLS=maxItersLS)
-sd_backtrack = SteepestDescentBacktracking(function, initialX, interval=interval, xtol=xtol, maxIters=maxIters, maxItersLS=maxItersLS)
-xOpt, fOpt, fevals = sd_backtrack.optimize()
+sd_algorithm = SteepestDescentAnalytical(function, initialX, interval=interval, xtol=xtol, maxIters=maxIters, maxItersLS=maxItersLS)
+xOpt, fOpt, fevals = sd_algorithm.optimize()
 
 print("Optimal X: ", xOpt)
 print("f(x*): ", fOpt)

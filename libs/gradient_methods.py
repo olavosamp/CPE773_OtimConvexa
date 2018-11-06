@@ -41,6 +41,7 @@ class SteepestDescent:
             # Update search position
             self.x[self.k+1] = self.x[self.k] + self.alpha[self.k]*self.direction[self.k]
 
+            ## Debug
             # print("\nIter ", self.k)
             # print("x[k]",    self.x[self.k] )
             # print("alpha[k]",self.alpha[self.k] )
@@ -66,6 +67,7 @@ class SteepestDescent:
         self.xOpt = self.x[-1]
         return self.xOpt, self.costFunc(self.x[-1]), self.fevals
 
+
 class SteepestDescentBacktracking(SteepestDescent):
     def line_search(self):
         t = 1
@@ -81,6 +83,22 @@ class SteepestDescentBacktracking(SteepestDescent):
 
         self.alpha[self.k] = t
         return t
+
+class SteepestDescentAnalytical(SteepestDescent):
+    def line_search(self):
+        if self.k == 0:
+            alphaProbe = 1
+        else:
+            alphaProbe = self.alpha[self.k-1]
+
+        fProbe  = self.evaluate(self.x[self.k] - alphaProbe*self.gradient)
+        self.fx = self.evaluate(self.x[self.k])
+
+        # Compute optimal alpha
+        optimalAlpha = (np.transpose(self.gradient) @ self.gradient * alphaProbe**2)/(2*(fProbe - self.fx + alphaProbe*np.transpose(self.gradient) @ self.gradient))
+        self.alpha[self.k] = optimalAlpha
+        # print("alpha", self.alpha[self.k])
+        return optimalAlpha
 
 def steepest_descent(func, initialX, interval=[-1e15, 1e15], xtol=1e-6, maxIters=1e3, maxItersLS=200):
     k         = 0
