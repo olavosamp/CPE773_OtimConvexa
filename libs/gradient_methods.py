@@ -4,11 +4,73 @@ from copy import copy
 
 from libs.line_search import FletcherILS, BacktrackingLineSearch
 
+class SteepestDescent:
+    def __init__(self, func, initialX, interval=[-1e15, 1e15], xtol=1e-6, maxIters=1e3, maxItersLS=200):
+        self.fevals     = 0
+        self.costFunc   = func
+        self.gradFunc   = grad(self.evaluate)
+        self.maxIters   = int(maxIters)
+        self.maxItersLS = maxItersLS
+        self.direction  = np.zeros((maxIters, 2))
+        self.interval   = interval
+        self.alpha      = np.zeros(maxIters)
+        self.xtol       = xtol
+        self.x          = np.zeros((maxIters, 2))
+
+        self.x[0] = initialX
+
+    def evaluate(self, x):
+        result = self.costFunc(x)
+        self.fevals += 1
+        return result
+
+
+    def line_search(self):
+        pass
+
+    def optimize(self):
+        self.k = 0
+        self.gradFunc = grad(self.evaluate)
+
+        while self.k < self.maxIters-1:
+            # Search direction
+            self.gradient          = self.gradFunc(self.x[self.k])
+            self.direction[self.k] = -self.gradient
+
+
+            self.alpha[self.k] = self.line_search()
+            self.x[self.k+1] = self.x[self.k] + self.alpha[self.k]*self.direction[self.k]
+
+            # Check for bad x or direction values
+            if np.isnan(self.x[self.k]).any() or np.isnan(self.direction[self.k]).any():
+                print("\nDescent diverged.")
+                print("x: ", self.x[self.k])
+                print("Grad(x): ", self.direction[self.k])
+                return self.x[self.k], self.costFunc(self.x[self.k]), self.fevals
+
+            # Check for stopping conditions
+            if np.linalg.norm(self.alpha[self.k]*self.direction[self.k], ord=2) < self.xtol:
+                self.xOpt = self.x[self.k]
+                return self.xOpt, self.costFunc(x[-1]), self.fevals
+            else:
+                self.k += 1
+        print("\nAlgorithm did not converge.")
+        self.xOpt = self.x[-1]
+        return self.xOpt, self.costFunc(x[-1]), self.fevals
+
+class SteepestDescentBacktracking(SteepestDescent):
+    def line_search(self):
+        lineSearch = BacktrackingLineSearch(self.costFunc, self.interval, xtol=self.xtol, maxIters=self.maxItersLS, initialX=self.x[self.k], initialDir=self.direction[self.k])
+        lineSearch.optimize()
+        self.fevals  += lineSearch.fevals
+        self.alpha[self.k] = lineSearch.alphaList[-1]
+        return self.alpha[self.k]
+
 def steepest_descent(func, initialX, interval=[-1e15, 1e15], xtol=1e-6, maxIters=1e3, maxItersLS=200):
     k         = 0
     fevals    = 0
-    maxIters  = int(maxIters)
     grad_func = grad(func)
+    maxIters  = int(maxIters)
     direction = np.zeros((maxIters, 2))
     x         = np.zeros((maxIters, 2))
     alpha     = np.zeros(maxIters)
