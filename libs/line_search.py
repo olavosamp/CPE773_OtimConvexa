@@ -445,19 +445,17 @@ class BacktrackingLineSearch(LineSearch):
 
         gradient = grad_func(self.x)
 
+        # Search direction is minus gradient direction
         if self.direction is None:
             self.direction = -np.sign(gradient)
-            # self.direction = -gradient
-        self.dirList = []
-        self.alphaList = []
 
+        self.dirList   = []
+        self.alphaList = []
         while self.iter <= self.maxIters:
             # print("LS Iter: ", self.iter)
-            t = 10
-
+            t = 1
             iter2 = 1
 
-            # Search direction is minus gradient direction
             self.fx = self.evaluate(self.x)
 
             # Actual Backtracking Line Search

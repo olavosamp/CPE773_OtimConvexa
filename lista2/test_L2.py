@@ -24,5 +24,3 @@ xOpt, fOpt, fevals = sd_backtrack.optimize()
 print("Optimal X: ", xOpt)
 print("f(x*): ", fOpt)
 print("FEvals: ", fevals)
-
-# Q
