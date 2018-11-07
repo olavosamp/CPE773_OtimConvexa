@@ -93,7 +93,7 @@ fig = plt.gcf()
 ax.set_title("Contour Plot and Backtracking Line Search")
 fig.set_size_inches(18, 10)
 fig.legend()
-#plt.show()
+plt.show()
 fig.savefig(dirs.figures+"Contour_Plot_BT"+".png", orientation='portrait', bbox_inches='tight')
 
 # plt.clf()

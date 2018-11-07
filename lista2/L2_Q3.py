@@ -10,7 +10,7 @@ maxItersLS = 200
 function   = func5
 interval   = [-1e15, 1e15]
 
-# Q 5.7
+# Q 5.8
 # initialX = [+4, +4]
 # initialX = [+4, -4]
 # initialX = [-4, +4]

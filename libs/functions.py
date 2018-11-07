@@ -39,3 +39,15 @@ def func5(x):
         raise ValueError("Input dimensions doesn't match. Expected 2, received {}.".format(xLen))
     else:
         return np.power(np.power(x[0], 2) + np.power(x[1], 2) -1, 2) + np.power(x[0] + x[1] - 1, 2)
+
+def func6(x):
+    xLen = np.shape(x)[0]
+    if xLen < 4:
+        raise ValueError("Input dimensions doesn't match. Expected 4, received {}.".format(xLen))
+    else:
+        f1 = (x[0] + 10*x[1])
+        f2 = np.sqrt(5)*(x[2] + x[3])
+        f3 = (x[1] -2*x[2])**2
+        f4 = 10*((x[0] - x[3])**2)
+        fVec = np.array([f1, f2, f3, f4])
+        return fVec
