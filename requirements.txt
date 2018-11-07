@@ -3,3 +3,4 @@ pandas
 autograd
 matplotlib
 tqdm
+xlwt
