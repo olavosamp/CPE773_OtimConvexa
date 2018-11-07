@@ -1,6 +1,7 @@
-import autograd.numpy as np
+import autograd.numpy      as np
+import scipy.optimize      as spo
 
-from libs.functions import func5
+from libs.functions        import func5
 from libs.gradient_methods import *
 
 
@@ -16,9 +17,20 @@ initialX = [+4, +4]
 # initialX = [-4, +4]
 # initialX = [-4, -4]
 
-sd_algorithm = SteepestDescentAnalytical(function, initialX, interval=interval, xtol=xtol, maxIters=maxIters, maxItersLS=maxItersLS)
+sd_algorithm = NewtonRaphson(function, initialX, interval=interval, xtol=xtol,
+                             maxIters=maxIters, maxItersLS=maxItersLS)
 xOpt, fOpt, fevals = sd_algorithm.optimize()
 
-print("Optimal X: ", xOpt)
+print("Initial X:", initialX)
+print("x*: ", xOpt)
 print("f(x*): ", fOpt)
 print("FEvals: ", fevals)
+
+optimResult = spo.minimize(function, initialX, method='BFGS', tol=xtol)
+xRef = optimResult.x
+fRef = optimResult.fun
+
+print("Ref x* = ", xRef)
+print("Ref f(x*) = ", fRef)
+print("Delta f(x) = ", np.abs(fOpt - fRef))
+print("CondVal: ", sd_algorithm.condVal)

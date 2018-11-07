@@ -2,6 +2,7 @@ from autograd import grad, hessian
 import autograd.numpy as np
 from copy import copy
 
+from libs.operators        import positive_definite
 from libs.line_search import FletcherILS, BacktrackingLineSearch
 
 class SteepestDescent:
@@ -26,14 +27,21 @@ class SteepestDescent:
     def line_search(self):
         pass
 
+    def get_direction(self, x):
+        self.gradient          = self.gradFunc(x)
+        return -self.gradient
+
+    def stopping_cond(self):
+        self.condVal = np.linalg.norm(self.alpha[self.k]*self.direction[self.k], ord=2)
+        return self.condVal < self.xtol
+
     def optimize(self):
         self.fevals   = 0
         self.gradFunc = grad(self.evaluate)
         self.k = 0
         while self.k < self.maxIters-1:
             # Update search direction
-            self.gradient          = self.gradFunc(self.x[self.k])
-            self.direction[self.k] = -self.gradient
+            self.direction[self.k] = self.get_direction(self.x[self.k])
 
             # Compute new alpha via line search
             self.alpha[self.k] = self.line_search()
@@ -51,17 +59,19 @@ class SteepestDescent:
 
             # Check for bad x or direction values
             if np.isnan(self.x[self.k]).any() or np.isnan(self.direction[self.k]).any():
-                print("\nDescent diverged.")
+                print("\nDescent algorithm diverged.")
                 print("x: ", self.x[self.k])
                 print("Grad(x): ", self.direction[self.k])
                 return self.x[self.k], self.costFunc(self.x[self.k]), self.fevals
 
             # Check for stopping conditions
-            if np.linalg.norm(self.alpha[self.k]*self.direction[self.k], ord=2) < self.xtol:
+            if self.stopping_cond() == True:
+                print("\nStopping condition reached, descent algorithm terminating.")
                 self.xOpt = self.x[self.k]
                 return self.xOpt, self.costFunc(self.xOpt), self.fevals
             else:
                 self.k += 1
+            # print("CondVal: ", self.condVal)
 
         print("\nAlgorithm did not converge.")
         self.xOpt = self.x[-1]
@@ -73,7 +83,7 @@ class SteepestDescentBacktracking(SteepestDescent):
         t = 1
         self.iter2 = 0
         self.alphaParam = 0.5
-        self.betaParam  = 0.9
+        self.betaParam  = 0.7
         self.fx = self.evaluate(self.x[self.k])
 
         while (self.evaluate(self.x[self.k] + t*self.direction[self.k]) > self.fx + self.alphaParam*t*(np.transpose(self.gradient) @ self.direction[self.k])) and (self.iter2 < self.maxItersLS):
@@ -99,6 +109,26 @@ class SteepestDescentAnalytical(SteepestDescent):
         self.alpha[self.k] = optimalAlpha
         # print("alpha", self.alpha[self.k])
         return optimalAlpha
+
+class NewtonRaphson(SteepestDescentAnalytical):
+    def compute_hessian(self, x):
+        self.hessFunc = hessian(self.evaluate)
+        hessVal = self.hessFunc(x)
+
+        if positive_definite(hessVal) == True:
+            beta = 1e9
+        else:
+            beta = 1e-9
+
+        identity = np.eye(np.shape(hessVal)[0])
+        hessModified = (hessVal + beta*identity)/(1 + beta)
+        return hessModified
+
+    def get_direction(self, x):
+        self.gradient = self.gradFunc(x)
+        self.hessian = self.compute_hessian(x)
+        dir = -np.linalg.inv(self.hessian) @ self.gradient
+        return dir
 
 def steepest_descent(func, initialX, interval=[-1e15, 1e15], xtol=1e-6, maxIters=1e3, maxItersLS=200):
     k         = 0
