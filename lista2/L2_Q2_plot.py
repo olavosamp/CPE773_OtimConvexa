@@ -90,9 +90,9 @@ for xList in optimList:
 # ax.plot(optimList, 'x', markersize=7, label='Line Search', linestyle='--', linewidth=1)
 
 fig = plt.gcf()
-ax.set_title("Contour Plot and Backtracking Line Search")
-fig.set_size_inches(18, 10)
-fig.legend()
+ax.set_title("Steepest Descent with Backtracking over Contour Plot")
+fig.set_size_inches(10, 10)
+fig.legend(loc='right')
 plt.show()
 fig.savefig(dirs.figures+"Contour_Plot_BT"+".png", orientation='portrait', bbox_inches='tight')
 

@@ -51,3 +51,15 @@ def func6(x):
         f4 = 10*((x[0] - x[3])**2)
         fVec = np.array([f1, f2, f3, f4])
         return fVec
+
+def func6_scalar(x):
+    xLen = np.shape(x)[0]
+    if xLen < 4:
+        raise ValueError("Input dimensions doesn't match. Expected 4, received {}.".format(xLen))
+    else:
+        f1 = (x[0] + 10*x[1])**2
+        f2 = 5*(x[2] + x[3])**2
+        f3 = (x[1] -2*x[2])**4
+        f4 = 100*((x[0] - x[3])**4)
+
+        return f1+f2+f3+f4

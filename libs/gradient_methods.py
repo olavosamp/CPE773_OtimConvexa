@@ -45,7 +45,7 @@ class SteepestDescent:
         while self.k < self.maxIters-1:
             # Update search direction
             self.direction[self.k] = self.get_direction(self.x[self.k])
-            return "DEBUG GAUSS-NEWTON"
+            # return "DEBUG GAUSS-NEWTON"
             # Compute new alpha via line search
             self.alpha[self.k] = self.line_search()
 
@@ -53,12 +53,13 @@ class SteepestDescent:
             self.x[self.k+1] = self.x[self.k] + self.alpha[self.k]*self.direction[self.k]
 
             ## Debug
-            # print("\nIter ", self.k)
-            # print("x[k]",    self.x[self.k] )
-            # print("alpha[k]",self.alpha[self.k] )
-            # print("dir[k]",  self.direction[self.k] )
-            # print("x[k+1]",  self.x[self.k+1] )
-            # print("f(x)", self.evaluate(self.x[self.k+1] ))
+            print("\nIter ", self.k)
+            print("x[k]",    self.x[self.k] )
+            print("alpha[k]",self.alpha[self.k] )
+            print("dir[k]",  self.direction[self.k] )
+            print("x[k+1]",  self.x[self.k+1] )
+            print("f(x)", self.evaluate(self.x[self.k+1] ))
+            # input()
 
             # Check for bad x or direction values
             if np.isnan(self.x[self.k]).any() or np.isnan(self.direction[self.k]).any():
@@ -87,11 +88,12 @@ class SteepestDescentBacktracking(SteepestDescent):
         self.iter2 = 0
         self.alphaParam = 0.5
         self.betaParam  = 0.7
+        self.alphaMin   = 1e-10
         self.fx = self.evaluate(self.x[self.k])
 
         while (self.evaluate(self.x[self.k] + t*self.direction[self.k]) > self.fx + self.alphaParam*t*(np.transpose(self.gradient) @ self.direction[self.k])) and (self.iter2 < self.maxItersLS):
             t = self.betaParam*t
-            t = np.clip(t, 2*self.xtol, None)
+            # t = np.clip(t, self.alphaMin, None)
             self.iter2 += 1
 
         self.alpha[self.k] = t
@@ -99,6 +101,7 @@ class SteepestDescentBacktracking(SteepestDescent):
 
 class SteepestDescentAnalytical(SteepestDescent):
     def line_search(self):
+        # print("Line search")
         if self.k == 0:
             alphaProbe = 1
         else:
@@ -109,19 +112,20 @@ class SteepestDescentAnalytical(SteepestDescent):
 
         # Compute optimal alpha
         optimalAlpha = (np.transpose(self.gradient) @ self.gradient * alphaProbe**2)/(2*(fProbe - self.fx + alphaProbe*np.transpose(self.gradient) @ self.gradient))
+        optimalAlpha = np.clip(optimalAlpha, self.alphaMin, None)
         self.alpha[self.k] = optimalAlpha
         # print("alpha", self.alpha[self.k])
         return optimalAlpha
 
-class NewtonRaphson(SteepestDescentAnalytical):
+class NewtonRaphson(SteepestDescentBacktracking):
     def compute_hessian(self, x):
         self.hessFunc = hessian(self.evaluate)
         hessVal = self.hessFunc(x)
 
         if positive_definite(hessVal) == True:
-            beta = 1e9
+            beta = 1e15
         else:
-            beta = 1e-9
+            beta = 1e-15
 
         identity = np.eye(np.shape(hessVal)[0])
         hessModified = (hessVal + beta*identity)/(1 + beta)
