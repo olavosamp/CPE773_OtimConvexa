@@ -63,3 +63,44 @@ def func6_scalar(x):
         f4 = 100*((x[0] - x[3])**4)
 
         return f1+f2+f3+f4
+
+def func7(x):
+    Q1 = np.array([[12,8,7,6],
+                   [8,12,8,7],
+                   [7,8,12,8],
+                   [6,7,8,12],
+    ])
+    Q2 = np.array([[3,2,1,0],
+                   [2,3,2,1],
+                   [1,2,3,2],
+                   [0,1,2,3],
+    ])
+    Q3 = np.array([[2,1,0,0],
+                   [1,2,1,0],
+                   [0,1,2,1],
+                   [0,0,1,2],
+    ])
+    Q4 = np.eye(4)
+
+    Q = np.block([[Q1,Q2,Q3,Q4],
+                  [Q2,Q1,Q2,Q3],
+                  [Q3,Q2,Q1,Q2],
+                  [Q4,Q3,Q2,Q1],
+    ])
+    # print(Q.shape)
+    # print(x.shape)
+    # print(Q)
+    # input()
+    b = -np.array([1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0])
+
+    xLen = np.shape(x)[0]
+    qLen = np.shape(Q)[1]
+    assert xLen == qLen, "Input should be a vector of length {}, received".format(qLen, xLen)
+    a = 0.5*(np.transpose(x) @ Q @ x)
+    c = + b @ x
+    return  a + c
+
+def func8(x):
+    xLen = np.shape(x)[0]
+    assert xLen == 2, "Input should be a vector of length {}, received".format(2, xLen)
+    return 100*(x[1] - x[0]**2)**2 + (1 - x[0])**2
