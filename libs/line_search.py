@@ -293,29 +293,22 @@ class CubicInterpolation(LineSearch):
         fList[3] = self.evaluate(x[3])
         f1_grad  = grad_func(x[1])
 
-        while True:
-            # print("Iter: ", self.iter)
+        while self.iter > self.maxIters:
             beta  = (fList[2] - fList[1] + f1_grad*(x[1] - x[2]))/((x[1] - x[2])**2)
             gamma = (fList[3] - fList[1] + f1_grad*(x[1] - x[3]))/((x[1] - x[3])**2)
             theta = (2*(x[1]**2) - x[2]*(x[1] + x[2]))/(x[1] - x[2])
             psi   = (2*(x[1]**2) - x[3]*(x[1] + x[3]))/(x[1] - x[3])
-            # print("beta: ", beta)
-            # print("gamma: ", gamma)
-            # print("theta: ", theta)
-            # print("psi: ", psi)
             a3 = (beta - gamma)/(theta - psi)
             a2 = beta - theta*a3
             a1 = f1_grad - 2*a2*x[1] - 3*a3*(x[1]**2)
-            # print("a3: ", a3)
-            # print("a2: ", a2)
-            # print("a1: ", a1)
+
+
             # Select xTest
             minXValue = -a2/(3*a3)
 
             extremPointsPos = (1/(3*a3)) * (-a2 + np.sqrt(a2**2 - 3*a1*a3))
             extremPointsNeg = (1/(3*a3)) * (-a2 + np.sqrt(a2**2 + 3*a1*a3))
-            # print("extremPointsPos: ", extremPointsPos)
-            # print("extremPointsNeg: ", extremPointsNeg)
+
 
             if extremPointsPos > minXValue:
                 xTest = extremPointsPos
@@ -323,11 +316,24 @@ class CubicInterpolation(LineSearch):
                 xTest = extremPointsNeg
             else:
                 xTest = extremPointsPos
-            # print("xTest: ", xTest)
             fTest = self.evaluate(xTest)
+
+            ## Debug
+            # print("Iter: ", self.iter)
+            # print("beta: ", beta)
+            # print("gamma: ", gamma)
+            # print("theta: ", theta)
+            # print("psi: ", psi)
+            # print("a3: ", a3)
+            # print("a2: ", a2)
+            # print("a1: ", a1)
+            # print("extremPointsPos: ", extremPointsPos)
+            # print("extremPointsNeg: ", extremPointsNeg)
+            # print("xTest: ", xTest)
             # print("fTest: ", fTest)
 
-            if (np.abs(xTest - x[0]) < self.epsilon) or (self.iter > self.maxIters):
+            # Test stopping conditions
+            if (np.abs(xTest - x[0]) < self.epsilon):
                 self.xOpt = xTest
                 return self.xOpt
 
@@ -339,7 +345,9 @@ class CubicInterpolation(LineSearch):
                 f1_grad = grad_func(xTest)
 
             self.iter += 1
-            # input()
+
+        print("Algorithm did not converge.")
+        return self.xOpt
 
 
 # Davies-Swann-Campey Algorithm

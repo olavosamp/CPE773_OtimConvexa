@@ -87,10 +87,7 @@ def func7(x):
                   [Q3,Q2,Q1,Q2],
                   [Q4,Q3,Q2,Q1],
     ])
-    # print(Q.shape)
-    # print(x.shape)
-    # print(Q)
-    # input()
+
     b = -np.array([1,1,1,1,0,0,0,0,1,1,1,1,0,0,0,0])
 
     xLen = np.shape(x)[0]
