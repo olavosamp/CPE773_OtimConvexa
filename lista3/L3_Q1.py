@@ -43,7 +43,7 @@ xLen = Q.shape[0]
 initialX = np.random.uniform(interval[0], interval[1], size=(xLen))
 
 # Q 6.1
-cd_alg = CoordinateGradient(function, initialX, b, Q, interval=interval, xtol=xtol,
+cd_alg = ConjugateGradient(function, initialX, b, Q, interval=interval, xtol=xtol,
                             maxIters=maxIters, maxItersLS=maxItersLS)
 xOpt, fOpt, fevals = cd_alg.optimize()
 
