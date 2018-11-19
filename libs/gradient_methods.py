@@ -52,12 +52,12 @@ class SteepestDescent:
             self.x[self.k+1] = self.x[self.k] + self.alpha[self.k]*self.direction[self.k]
 
             ## Debug
-            print("\nIter ", self.k)
-            print("x[k]",    self.x[self.k] )
-            print("alpha[k]",self.alpha[self.k] )
-            print("dir[k]",  self.direction[self.k] )
-            print("x[k+1]",  self.x[self.k+1] )
-            print("f(x)", self.evaluate(self.x[self.k+1] ))
+            # print("\nIter ", self.k)
+            # print("x[k]",    self.x[self.k] )
+            # print("alpha[k]",self.alpha[self.k] )
+            # print("dir[k]",  self.direction[self.k] )
+            # print("x[k+1]",  self.x[self.k+1] )
+            # print("f(x)", self.evaluate(self.x[self.k+1] ))
             # input()
 
             # Check for bad x or direction values
@@ -100,6 +100,8 @@ class SteepestDescentBacktracking(SteepestDescent):
 
 class SteepestDescentAnalytical(SteepestDescent):
     def line_search(self):
+        self.alphaMin   = 1e-10
+
         # print("Line search")
         if self.k == 0:
             alphaProbe = 1

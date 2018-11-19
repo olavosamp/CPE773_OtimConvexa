@@ -274,9 +274,9 @@ class CubicInterpolation(LineSearch):
         self.maxIters = maxIters
         self.epsilon  = xtol/4
         self.interval = interval
-        self.iter = 0
 
     def optimize(self):
+        self.iter = 0
         self.fevals = 0
         grad_func = grad(self.evaluate)
 
@@ -293,7 +293,7 @@ class CubicInterpolation(LineSearch):
         fList[3] = self.evaluate(x[3])
         f1_grad  = grad_func(x[1])
 
-        while self.iter > self.maxIters:
+        while self.iter < self.maxIters:
             beta  = (fList[2] - fList[1] + f1_grad*(x[1] - x[2]))/((x[1] - x[2])**2)
             gamma = (fList[3] - fList[1] + f1_grad*(x[1] - x[3]))/((x[1] - x[3])**2)
             theta = (2*(x[1]**2) - x[2]*(x[1] + x[2]))/(x[1] - x[2])
@@ -347,6 +347,7 @@ class CubicInterpolation(LineSearch):
             self.iter += 1
 
         print("Algorithm did not converge.")
+        self.xOpt = xTest
         return self.xOpt
 
 

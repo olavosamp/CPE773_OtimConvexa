@@ -2,12 +2,13 @@ from autograd         import grad, hessian, jacobian
 import autograd.numpy as np
 
 from libs.operators        import positive_definite
-from libs.line_search      import CubicInterpolation, BacktrackingLineSearch
+from libs.line_search      import *
 
 class ConjugateDirection:
     def __init__(self, func, initialX, interval=[-1e15, 1e15], xtol=1e-6, maxIters=1e3, maxItersLS=200):
         self.costFunc   = func
         self.gradFunc   = grad(self.evaluate)
+        self.hessFunc   = hessian(self.evaluate)
         self.maxIters   = int(maxIters)
         self.maxItersLS = maxItersLS
         self.interval   = interval
@@ -33,7 +34,9 @@ class ConjugateDirection:
             return self.evaluate(x + alpha*self.direction[self.iter])
 
         lineSearch = CubicInterpolation(funcLS, self.interval, xtol=self.xtol, maxIters=self.maxItersLS)
-        self.xLS = lineSearch.optimize()
+        # lineSearch = QuadraticInterpolation(funcLS, self.interval, xtol=self.xtol, maxIters=self.maxItersLS)
+        self.alpha[self.iter] = lineSearch.optimize()
+        self.xLS = self.x[self.iter] + self.alpha[self.iter]*self.direction[self.iter]
         return self.xLS
 
 
@@ -46,18 +49,18 @@ class ConjugateDirection:
 
 
 class ConjugateGradient(ConjugateDirection):
-    def __init__(self, func, initialX, b, H, interval=[-1e15, 1e15], xtol=1e-6, maxIters=1e3, maxItersLS=200):
+    def __init__(self, func, initialX, interval=[-1e15, 1e15], xtol=1e-6, maxIters=1e3, maxItersLS=200):
         super().__init__(func, initialX, interval=interval, xtol=xtol, maxIters=maxIters, maxItersLS=maxItersLS)
 
-        self.hessFunc = hessian(self.evaluate)
+        self.hessFunc   = hessian(self.evaluate)
 
-        self.g       = np.zeros((self.maxIters, self.xLen))
-        self.direction       = np.zeros((self.maxIters, self.xLen))
-        self.alpha   = np.zeros((self.maxIters))
-        self.hessVal = np.zeros((self.maxIters, self.xLen, self.xLen))
+        self.g          = np.zeros((self.maxIters, self.xLen))
+        self.direction  = np.zeros((self.maxIters, self.xLen))
+        self.alpha      = np.zeros((self.maxIters))
+        self.hessVal    = np.zeros((self.maxIters, self.xLen, self.xLen))
 
-        self.b = b
-        self.H = H
+        self.b          = self.gradFunc(np.zeros(self.xLen))
+        self.H          = self.hessFunc(np.zeros(self.xLen))
 
 
     def get_direction(self):
@@ -109,46 +112,54 @@ class ConjugateGradient(ConjugateDirection):
         return self.xOpt, self.costFunc(self.x[-1]), self.fevals
 
 class FletcherReeves(ConjugateGradient):
-    def __init__(self, func, initialX, b, H, interval=[-1e15, 1e15], xtol=1e-6, maxIters=1e3, maxItersLS=200):
-        super().__init__(func, initialX, b, H, interval=interval, xtol=xtol, maxIters=maxIters, maxItersLS=maxItersLS)
+    def __init__(self, func, initialX, interval=[-1e15, 1e15], xtol=1e-6, maxIters=1e3, maxItersLS=200):
+        super().__init__(func, initialX, interval=interval, xtol=xtol, maxIters=maxIters, maxItersLS=maxItersLS)
 
-        self.hessFunc    = hessian(self.evaluate)
         self.restartIter = self.xLen
 
         self.g           = np.zeros((self.restartIter*self.maxIters, self.xLen))
         self.direction   = np.zeros((self.restartIter*self.maxIters, self.xLen))
-        self.hessVal     = np.zeros((self.restartIter*self.maxIters, self.xLen, self.xLen))
+        # self.hessVal     = np.zeros((self.restartIter*self.maxIters, self.xLen, self.xLen))
 
-        self.b = b
-        self.H = H
+    def line_search(self, x):
+        def funcLS(alpha):
+            return self.evaluate(x + alpha*self.direction[self.iter])
 
-        def optimize(self):
-            self.iter = 0
-            self.totIter = 0
+        # lineSearch = CubicInterpolation(funcLS, self.interval, xtol=self.xtol, maxIters=self.maxItersLS)
+        lineSearch = QuadraticInterpolation(funcLS, self.interval, xtol=self.xtol, maxIters=self.maxItersLS)
+        self.alpha[self.iter] = lineSearch.optimize()
+        self.xLS = x + self.alpha[self.iter]*self.direction[self.iter]
+        print("LS FEvals: ", lineSearch.fevals)
+        return self.xLS
 
-            # Initial values for g and d
-            self.g[0] = self.b + self.H @ self.x[0]
-            self.direction[0] = -self.g[0]
+    def optimize(self):
+        self.iter = 0
+        self.totIter = 0
 
-            while self.totIter < self.maxIters-2:
-                self.hessVal[self.iter] = self.hessFunc(self.x[self.iter])
+        # Initial values for g and d
+        self.g[0] = self.b + self.H @ self.x[0]
+        self.direction[0] = -self.g[0]
 
-                self.x[self.iter+1] = self.line_search(self.x[self.iter])
+        while self.totIter < self.maxIters-2:
+            # self.hessVal[self.iter] = self.hessFunc(self.x[self.iter])
 
-                # Check stopping condition
-                if self.stopping_cond() == True:
-                    print("\nStopping condition reached, algorithm terminating.")
-                    self.xOpt = self.x[self.iter+1]
-                    return self.xOpt, self.costFunc(self.xOpt), self.fevals
+            self.x[self.iter+1] = self.line_search(self.x[self.iter])
 
-                if k == self.restartIter - 1:
-                    self.x[0] = self.x[self.iter+1]
-                    self.totIter += self.iter
-                else:
-                    # Compute new direction
-                    self.direction[self.iter+1] = self.get_direction()
-                    self.iter += 1
+            # Check stopping condition
+            if self.stopping_cond() == True:
+                print("\nStopping condition reached, algorithm terminating.")
+                self.xOpt = self.x[self.iter+1]
+                return self.xOpt, self.costFunc(self.xOpt), self.fevals
 
-            print("\nAlgorithm did not converge.")
-            self.xOpt = self.x[-1]
-            return self.xOpt, self.costFunc(self.x[-1]), self.fevals
+            if self.iter == self.restartIter - 1:
+                self.x[0] = self.x[self.iter+1]
+                self.totIter += self.iter
+            else:
+                # Compute new direction
+                self.direction[self.iter+1] = self.get_direction()
+                self.iter += 1
+
+        print("\nAlgorithm did not converge.")
+        input()
+        self.xOpt = self.x[-1]
+        return self.xOpt, self.costFunc(self.x[-1]), self.fevals
