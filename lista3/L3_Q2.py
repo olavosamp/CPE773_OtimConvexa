@@ -13,7 +13,7 @@ xtol       = 1e-6
 maxIters   = 500
 maxItersLS = 200
 function   = func8
-interval   = [-1e15, 1e15]
+interval   = [-1e2, 1e2]
 savePath = dirs.results+"L3_Q2.xls"
 
 
@@ -21,6 +21,7 @@ savePath = dirs.results+"L3_Q2.xls"
 initialXList = [[+2., -2.],
                 [-2., +2.],
                 [-2., -2.],]
+# initialXList = [[-2., +2.]]
 
 xList      = []
 fxList     = []
@@ -28,6 +29,7 @@ fevalsList = []
 deltaFList = []
 
 for initialX in initialXList:
+    # input()
     sd_algorithm = FletcherReeves(function, initialX, interval=interval, xtol=xtol,
                                      maxIters=maxIters, maxItersLS=maxItersLS)
     # sd_algorithm = FletcherReeves(function, initialX, interval=interval, xtol=xtol,

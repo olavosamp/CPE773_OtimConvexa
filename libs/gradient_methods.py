@@ -2,7 +2,7 @@ from autograd         import grad, hessian, jacobian
 import autograd.numpy as np
 
 from libs.operators        import positive_definite
-from libs.line_search      import FletcherILS, BacktrackingLineSearch
+from libs.line_search      import FletcherILS, BacktrackingOptim
 
 class SteepestDescent:
     def __init__(self, func, initialX, interval=[-1e15, 1e15], xtol=1e-6, maxIters=1e3, maxItersLS=200):

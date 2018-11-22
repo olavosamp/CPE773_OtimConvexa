@@ -1,3 +1,4 @@
+from tqdm             import tqdm
 from autograd         import grad, hessian, jacobian
 import autograd.numpy as np
 
@@ -33,8 +34,8 @@ class ConjugateDirection:
         def funcLS(alpha):
             return self.evaluate(x + alpha*self.direction[self.iter])
 
-        lineSearch = CubicInterpolation(funcLS, self.interval, xtol=self.xtol, maxIters=self.maxItersLS)
-        # lineSearch = QuadraticInterpolation(funcLS, self.interval, xtol=self.xtol, maxIters=self.maxItersLS)
+        # lineSearch = FibonacciSearch(funcLS, self.interval, xtol=self.xtol, maxIters=self.maxItersLS)
+        # lineSearch = BacktrackingOptim(funcLS, self.interval, xtol=self.xtol, maxIters=self.maxItersLS)
         self.alpha[self.iter] = lineSearch.optimize()
         self.xLS = self.x[self.iter] + self.alpha[self.iter]*self.direction[self.iter]
         return self.xLS
@@ -116,6 +117,7 @@ class FletcherReeves(ConjugateGradient):
         super().__init__(func, initialX, interval=interval, xtol=xtol, maxIters=maxIters, maxItersLS=maxItersLS)
 
         self.restartIter = self.xLen
+        # self.restartIter = 20
 
         self.g           = np.zeros((self.restartIter*self.maxIters, self.xLen))
         self.direction   = np.zeros((self.restartIter*self.maxIters, self.xLen))
@@ -125,11 +127,14 @@ class FletcherReeves(ConjugateGradient):
         def funcLS(alpha):
             return self.evaluate(x + alpha*self.direction[self.iter])
 
-        # lineSearch = CubicInterpolation(funcLS, self.interval, xtol=self.xtol, maxIters=self.maxItersLS)
-        lineSearch = QuadraticInterpolation(funcLS, self.interval, xtol=self.xtol, maxIters=self.maxItersLS)
+        # lineSearch = BacktrackingOptim(funcLS, self.interval, xtol=self.xtol, maxIters=self.maxItersLS)
+        lineSearch = FibonacciSearch(funcLS, self.interval, xtol=self.xtol, maxIters=self.maxItersLS)
         self.alpha[self.iter] = lineSearch.optimize()
         self.xLS = x + self.alpha[self.iter]*self.direction[self.iter]
-        print("LS FEvals: ", lineSearch.fevals)
+
+        # print("alpha ", self.alpha[self.iter])
+        # print("xLS", self.xLS)
+        # print("LS FEvals: ", lineSearch.fevals)
         return self.xLS
 
     def optimize(self):
@@ -140,10 +145,23 @@ class FletcherReeves(ConjugateGradient):
         self.g[0] = self.b + self.H @ self.x[0]
         self.direction[0] = -self.g[0]
 
-        while self.totIter < self.maxIters-2:
+        # print("b ", self.b)
+        # print("H ", self.H)
+        # print("g ", self.g[0])
+        # print("")
+        while (self.totIter < self.maxIters-2):
+            # print("Tot Iter: ", self.totIter)
             # self.hessVal[self.iter] = self.hessFunc(self.x[self.iter])
 
             self.x[self.iter+1] = self.line_search(self.x[self.iter])
+
+            ## Debug
+            # print("ITER ", self.iter)
+            # print("direction ", self.direction[self.iter])
+            # print("alpha ", self.alpha[self.iter])
+            # print("x: ", self.x[self.iter])
+            # print("x[k+1]: ", self.x[self.iter+1])
+            # input()
 
             # Check stopping condition
             if self.stopping_cond() == True:
@@ -151,15 +169,15 @@ class FletcherReeves(ConjugateGradient):
                 self.xOpt = self.x[self.iter+1]
                 return self.xOpt, self.costFunc(self.xOpt), self.fevals
 
-            if self.iter == self.restartIter - 1:
+            if self.iter == self.restartIter-1:
                 self.x[0] = self.x[self.iter+1]
                 self.totIter += self.iter
+                self.iter = 0
             else:
                 # Compute new direction
                 self.direction[self.iter+1] = self.get_direction()
                 self.iter += 1
 
         print("\nAlgorithm did not converge.")
-        input()
-        self.xOpt = self.x[-1]
-        return self.xOpt, self.costFunc(self.x[-1]), self.fevals
+        self.xOpt = self.x[self.iter]
+        return self.xOpt, self.costFunc(self.xOpt), self.fevals

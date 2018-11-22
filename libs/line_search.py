@@ -177,7 +177,7 @@ class GoldenSectionSearch(LineSearch):
         fB[0] = self.evaluate(xB[0])
 
         # print("\nStart iterating")
-        while True:
+        while k < self.maxIters-1:
             I[k+2] = I[k+1]/self.goldenRatio
 
             if fA[k] >= fB[k]:
@@ -309,7 +309,6 @@ class CubicInterpolation(LineSearch):
             extremPointsPos = (1/(3*a3)) * (-a2 + np.sqrt(a2**2 - 3*a1*a3))
             extremPointsNeg = (1/(3*a3)) * (-a2 + np.sqrt(a2**2 + 3*a1*a3))
 
-
             if extremPointsPos > minXValue:
                 xTest = extremPointsPos
             elif extremPointsNeg > minXValue:
@@ -346,8 +345,8 @@ class CubicInterpolation(LineSearch):
 
             self.iter += 1
 
-        print("Algorithm did not converge.")
         self.xOpt = xTest
+        print("Algorithm did not converge.")
         return self.xOpt
 
 
@@ -428,8 +427,29 @@ class DSCAlgorithm(LineSearch):
             increment[self.iter+1] = scaleFactor*increment[self.iter]
 
 
-# Backtracking Line Search
-class BacktrackingLineSearch(LineSearch):
+# # Backtracking Line Search
+# class BacktrackingLineSearch(LineSearch):
+#     def optimize(self):
+#         self.iter = 0
+#         self.alphaParam = 0.5
+#         self.betaParam  = 0.7
+#         self.alphaMin   = 1e-10
+#
+#         self.fx         = self.evaluate(self.x[self.k])
+#
+#         t = 1
+#         while (self.iter < self.maxItersLS):
+#             if (self.evaluate(self.x[self.k] + t*self.direction[self.k]) > self.fx + self.alphaParam*t*(np.transpose(self.gradient) @ self.direction[self.k])):
+#                 self.x =
+#
+#             t = self.betaParam*t
+#             # t = np.clip(t, self.alphaMin, None)
+#             self.iter += 1
+#
+#         self.alpha[self.k] = t
+#         return t
+
+class BacktrackingOptim(LineSearch):
     def __init__(self, costFunc, interval, xtol=1e-8, maxIters=1e3, alpha=0.5, beta=0.5,
                 initialX=None, initialDir=None):
         super().__init__(costFunc, xtol)
