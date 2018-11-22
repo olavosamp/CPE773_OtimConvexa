@@ -101,3 +101,8 @@ def func8(x):
     xLen = np.shape(x)[0]
     assert xLen == 2, "Input should be a vector of length {}, received".format(2, xLen)
     return 100*(x[1] - x[0]**2)**2 + (1 - x[0])**2
+
+def func9(x):
+    xLen = np.shape(x)[0]
+    assert xLen == 2, "Input should be a vector of length {}, received".format(2, xLen)
+    return 5*(x[0]**2) - 9*x[0]*x[1] + 4.075*(x[1]**2) + x[0]
