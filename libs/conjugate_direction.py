@@ -21,7 +21,7 @@ class ConjugateDirection:
         self.x          = np.zeros((self.maxIters, self.xLen))
         self.x[0]       = initialX
 
-        self.gradFunc   = grad(self.evaluate)
+        # self.gradFunc   = grad(self.evaluate)
 
 
     def evaluate(self, x):
@@ -34,10 +34,11 @@ class ConjugateDirection:
         def funcLS(alpha):
             return self.evaluate(x + alpha*self.direction[self.iter])
 
-        # lineSearch = FibonacciSearch(funcLS, self.interval, xtol=self.xtol, maxIters=self.maxItersLS)
+        lineSearch = FibonacciSearch(funcLS, self.interval, xtol=self.xtol, maxIters=self.maxItersLS)
         # lineSearch = BacktrackingOptim(funcLS, self.interval, xtol=self.xtol, maxIters=self.maxItersLS)
         self.alpha[self.iter] = lineSearch.optimize()
         self.xLS = self.x[self.iter] + self.alpha[self.iter]*self.direction[self.iter]
+        self.fevals += lineSearch.fevals
         return self.xLS
 
 
@@ -132,12 +133,14 @@ class FletcherReeves(ConjugateGradient):
         self.alpha[self.iter] = lineSearch.optimize()
         self.xLS = x + self.alpha[self.iter]*self.direction[self.iter]
 
+        self.fevals += lineSearch.fevals
         # print("alpha ", self.alpha[self.iter])
         # print("xLS", self.xLS)
         # print("LS FEvals: ", lineSearch.fevals)
         return self.xLS
 
     def optimize(self):
+        self.fevals = 0
         self.iter = 0
         self.totIter = 0
 

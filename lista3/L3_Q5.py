@@ -4,36 +4,29 @@ import autograd.numpy      as np
 import scipy.optimize      as spo
 
 import libs.dirs              as dirs
-from libs.functions           import func8
+from libs.functions           import func9
 from libs.quasi_newton        import *
-# from libs.gradient_methods    import *
+from libs.gradient_methods    import *
 
 
-xtol       = 1e-6
+xtol       = 3e-7
 maxIters   = 500
 maxItersLS = 200
-function   = func8
-interval   = [-1e1, 1e1]
-savePath = dirs.results+"L3_Q4.xls"
+function   = func9
+interval   = [-1e2, 1e2]
+savePath = dirs.results+"L3_Q5.xls"
 
 
-# Q 7.7
-# initialXList = [np.random.uniform(low=interval[0], high=interval[1], size=2),
-#                 np.random.uniform(low=interval[0], high=interval[1], size=2),
-#                 np.random.uniform(low=interval[0], high=interval[1], size=2)]
-
-initialXList = [[+2., -2.],
-                [-2., +2.],
-                [-2., -2.]]
+# Q 7.8
+initialXList = [[0,0]
+]
 
 xList      = []
 fxList     = []
 fevalsList = []
 deltaFList = []
 for initialX in initialXList:
-    # print(initialX.shape)
-    # input()
-    sd_algorithm = QuasiNewtonDFP(function, initialX, interval=interval, xtol=xtol,
+    sd_algorithm = QuasiNewtonBFGS(function, initialX, interval=interval, xtol=xtol,
                                      maxIters=maxIters, maxItersLS=maxItersLS)
 
     xOpt, fOpt, fevals = sd_algorithm.optimize()
@@ -43,8 +36,9 @@ for initialX in initialXList:
     print("x*: ", xOpt)
     print("FEvals: ", fevals)
 
-    xRef = np.array([1, 1])
-    fRef = func8(xRef)
+    optimResult = spo.minimize(function, initialX, method='BFGS', tol=xtol)
+    xRef = optimResult.x
+    fRef = optimResult.fun
     deltaF = np.abs(fOpt - fRef)
 
     print("Delta f(x) = ", deltaF)

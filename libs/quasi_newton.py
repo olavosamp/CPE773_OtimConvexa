@@ -78,6 +78,7 @@ class QuasiNewton:
 
 
     def optimize(self):
+        self.fevals = 0
         ## Step 1
         self.f0 = self.evaluate(self.x[0])
         self.gradient[0] = self.gradFunc(self.x[0])
@@ -172,7 +173,7 @@ class QuasiNewton:
 
 
 
-class QuasiNewtonDPS(QuasiNewton):
+class QuasiNewtonDFP(QuasiNewton):
     def get_S(self):
         arg1 = (self.deltaK @ np.transpose(self.deltaK))/(np.transpose(self.deltaK) @ self.gamma)
         arg2 = (self.S[self.k]@self.gamma)@(self.gamma.T@self.S[self.k])/(self.gamma.T@self.S[self.k]@self.gamma)

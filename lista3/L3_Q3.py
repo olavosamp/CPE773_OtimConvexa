@@ -20,7 +20,7 @@ savePath = dirs.results+"L3_Q3.xls"
 # Q 6.3
 # initialXList = [[1, 1]]
 initialX = [1, 1]
-maxItersList = [1, 2, 500, 1500]
+maxItersList = [1500]
 
 initialXList = []
 
@@ -45,6 +45,8 @@ for maxIters in maxItersList:
     sd_algorithm = SteepestDescentAnalytical(function, initialX, interval=interval, xtol=xtol,
                                             maxIters=maxIters, maxItersLS=maxItersLS)
     xOptSD, fOptSD, fevalsSD = sd_algorithm.optimize()
+    print(sd_algorithm.k)
+    input()
 
     print("Initial X:", initialX)
     print("\nConjugateGradient")
