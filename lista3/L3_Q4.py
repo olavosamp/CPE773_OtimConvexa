@@ -9,7 +9,7 @@ from libs.conjugate_direction import *
 from libs.gradient_methods    import *
 
 
-xtol       = 3e-7
+xtol       = 1e-6
 maxIters   = 500
 maxItersLS = 200
 function   = func9
@@ -17,10 +17,10 @@ interval   = [-1e2, 1e2]
 savePath = dirs.results+"L3_Q3.xls"
 
 
-# Q 6.3
+# Q 7.1
 # initialXList = [[1, 1]]
 initialX = [1, 1]
-maxItersList = [1, 2, 500, 1500]
+maxItersList = [1000]
 
 initialXList = []
 
