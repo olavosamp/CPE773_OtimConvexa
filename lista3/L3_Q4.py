@@ -4,95 +4,65 @@ import autograd.numpy      as np
 import scipy.optimize      as spo
 
 import libs.dirs              as dirs
-from libs.functions           import func9
-from libs.conjugate_direction import *
-from libs.gradient_methods    import *
+from libs.functions           import func8
+from libs.quasi_newton        import *
+# from libs.gradient_methods    import *
 
 
 xtol       = 1e-6
 maxIters   = 500
 maxItersLS = 200
-function   = func9
-interval   = [-1e2, 1e2]
-savePath = dirs.results+"L3_Q3.xls"
+function   = func8
+interval   = [-1e1, 1e1]
+savePath = dirs.results+"L3_Q4.xls"
 
 
-# Q 7.1
-# initialXList = [[1, 1]]
-initialX = [1, 1]
-maxItersList = [1000]
+# Q 7.7
+# initialXList = [np.random.uniform(low=interval[0], high=interval[1], size=2),
+#                 np.random.uniform(low=interval[0], high=interval[1], size=2),
+#                 np.random.uniform(low=interval[0], high=interval[1], size=2)]
 
-initialXList = []
+initialXList = [[+2., -2.],
+                [-2., +2.],
+                [-2., -2.]]
 
-xListSD        = []
-fxListSD       = []
-fevalsListSD   = []
-deltaFListSD   = []
-
-xListCG        = []
-fxListCG       = []
-fevalsListCG   = []
-deltaFListCG   = []
-
-for maxIters in maxItersList:
+xList      = []
+fxList     = []
+fevalsList = []
+deltaFList = []
+for initialX in initialXList:
+    # print(initialX.shape)
     # input()
-    cg_algorithm = ConjugateGradient(function, initialX, interval=interval, xtol=xtol,
+    sd_algorithm = QuasiNewtonDPS(function, initialX, interval=interval, xtol=xtol,
                                      maxIters=maxIters, maxItersLS=maxItersLS)
-    # sd_algorithm = FletcherReeves(function, initialX, interval=interval, xtol=xtol,
-    #                              maxIters=maxIters, maxItersLS=maxItersLS)
-    xOptCG, fOptCG, fevalsCG = cg_algorithm.optimize()
 
-    sd_algorithm = SteepestDescentAnalytical(function, initialX, interval=interval, xtol=xtol,
-                                            maxIters=maxIters, maxItersLS=maxItersLS)
-    xOptSD, fOptSD, fevalsSD = sd_algorithm.optimize()
+    xOpt, fOpt, fevals = sd_algorithm.optimize()
 
     print("Initial X:", initialX)
-    print("\nConjugateGradient")
-    print("f(x*): ", fOptCG)
-    print("x*: ", xOptCG)
+    print("f(x*): ", fOpt)
+    print("x*: ", xOpt)
+    print("FEvals: ", fevals)
 
-    print("\nSteepestDescent")
-    print("FEvals: ", fevalsCG)
-    print("f(x*): ", fOptSD)
-    print("x*: ", xOptSD)
-    print("FEvals: ", fevalsSD)
+    xRef = np.array([1, 1])
+    fRef = func8(xRef)
+    deltaF = np.abs(fOpt - fRef)
 
-    optimResult = spo.minimize(function, initialX, method='BFGS', tol=xtol)
-    xRef = optimResult.x
-    fRef = optimResult.fun
+    print("Delta f(x) = ", deltaF)
+    print("Ref x* = ", xRef)
+    print("Ref f(x*) = ", fRef)
 
-    deltaFSD = np.abs(fOptSD - fRef)
-    deltaFCG = np.abs(fOptCG - fRef)
+    xList.append(xOpt)
+    fxList.append(fOpt)
+    fevalsList.append(fevals)
+    deltaFList.append(deltaF)
 
-    print("Delta f(x) = ", deltaFCG)
-    # print("Ref x* = ", xRef)
-    # print("Ref f(x*) = ", fRef)
-
-    xListSD.append(xOptSD)
-    fxListSD.append(fOptSD)
-    fevalsListSD.append(fevalsSD)
-    deltaFListSD.append(deltaFSD)
-
-    xListCG.append(xOptCG)
-    fxListCG.append(fOptCG)
-    fevalsListCG.append(fevalsCG)
-    deltaFListCG.append(deltaFCG)
-
-    initialXList.append(initialX)
-
-xListSD = np.array(xListSD)
-xListCG = np.array(xListCG)
-
-runData = { "Iteration"                  : maxItersList,
-            "Initial x"                  : initialXList,
-            "f(x*) SteepestDescent"      : fxListSD,
-            "f(x*) ConjugateGradient"    : fxListCG,
-            "FEvalsSD"                   : fevalsListSD,
-            "FEvalsCG"                   : fevalsListCG,
-            "Delta F SD"                 : deltaFListSD,
-            "Delta F CG"                 : deltaFListCG}
-
-resultsDf = pd.DataFrame(data=runData)
+xList = np.array(xList)
+resultsDf = pd.DataFrame(data={"Initial x": initialXList,
+                                "x*_1"    : xList[:, 0],
+                                "x*_2"    : xList[:, 1],
+                                "f(x*)"   : fxList,
+                                "FEvals"  : fevalsList,
+                                "Delta F" : deltaFList})
 
 print(resultsDf)
 resultsDf.to_excel(savePath)

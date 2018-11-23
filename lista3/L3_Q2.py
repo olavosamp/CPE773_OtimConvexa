@@ -20,7 +20,7 @@ savePath = dirs.results+"L3_Q2.xls"
 # Q 6.2
 initialXList = [[+2., -2.],
                 [-2., +2.],
-                [-2., -2.],]
+                [-2., -2.]]
 # initialXList = [[-2., +2.]]
 
 xList      = []
