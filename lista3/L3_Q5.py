@@ -26,7 +26,7 @@ fxList     = []
 fevalsList = []
 deltaFList = []
 for initialX in initialXList:
-    sd_algorithm = QuasiNewtonBFGS(function, initialX, interval=interval, xtol=xtol,
+    sd_algorithm = QuasiNewtonDFP(function, initialX, interval=interval, xtol=xtol,
                                      maxIters=maxIters, maxItersLS=maxItersLS)
 
     xOpt, fOpt, fevals = sd_algorithm.optimize()
@@ -39,11 +39,13 @@ for initialX in initialXList:
     optimResult = spo.minimize(function, initialX, method='BFGS', tol=xtol)
     xRef = optimResult.x
     fRef = optimResult.fun
+    fevalRef = optimResult.nfev
     deltaF = np.abs(fOpt - fRef)
 
     print("Delta f(x) = ", deltaF)
     print("Ref x* = ", xRef)
     print("Ref f(x*) = ", fRef)
+    print("Ref FEvals = ", fevalRef)
 
     xList.append(xOpt)
     fxList.append(fOpt)
