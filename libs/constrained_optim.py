@@ -84,5 +84,22 @@ def eq_constraint_elimination(func, eqConstraintsMat):
 
 
 def compose_eq_cons_func(func, F, x_hat):
-    newFunc = lambda z: np.dot(F, z) + x_hat
+    # x_hat = x_hat[:,np.newaxis]
+    # print(F.shape)
+    # print(x_hat.shape)
+
+    newFunc = lambda z: func(F @ z + x_hat)
     return newFunc
+
+def compose_logarithmic_barrier(constraintList):
+    for constraint in constraintList:
+        funcList = []
+        if constraint['type'] == 'ineq':
+            funcList.append(constraint['fun'])
+    if len(funcList ) == 0:
+        raise ValueError("No inequality constraints found.")
+
+    logBarrier = lambda x: 0
+    for func in funcList:
+        logBarrier = lambda x: logBarrier(x) + modified_log(x)
+    return logBarrier
