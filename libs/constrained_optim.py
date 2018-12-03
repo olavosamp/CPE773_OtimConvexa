@@ -1,4 +1,6 @@
+import scipy               as scp
 import scipy.optimize      as spo
+import autograd.numpy      as np
 
 # def wrap_eq_constraints(fun, mat):
 #     constraint = {'fun': fun,
@@ -48,14 +50,39 @@ def feasibility(constraintList, initialX, tolerance=1e-8):
 
 
 def eq_constraint_elimination(func, eqConstraintsMat):
-    xLen = eqConstraintsMat['A'].shape[1]
-    bLen = eqConstraintsMat['b'].shape[0]
+    '''
+        Eliminates equality constraints Ax = b by parametrization of x as Fz + x_hat.
+        F is the nullspace of matrix A, such as AFz = 0, where z is any vector.
+        Indeed, AF = 0. x_hat is any viable x that satisfies the constraint.
 
-    optimResult = spo.linprog(np.zeros(xLen), A_eq=eqConstraintsMat['A'], b_eq=eqConstraintsMat['b'])
+        eqConstraintsMat is a dict with matrixes A, b in keys 'A' and 'b', respectively.
+    '''
+    A = eqConstraintsMat['A']
+    b = eqConstraintsMat['b']
+
+    xLen = A.shape[1]
+    bLen = b.shape[0]
+
+    optimResult = spo.linprog(np.zeros(xLen), A_eq=A, b_eq=b)
     x_hat = optimResult.x
 
+    # Find a matrix F whose range is the nullspace of A
+    F = scp.linalg.null_space(A)
+
     # Result check
-    check = eqConstraintsMat['A'] @ x_hat
+    check = A @ x_hat
     for i in range(bLen):
-        if check[i] != eqConstraintsMat['b'][i]:
-            raise ValueError("Error in reference point calculation: x_hat does not satisfy Ax = b.")
+        if check[i] != b[i]:
+            raise ValueError("Error in equality constraint elimination: x_hat does not satisfy Ax = b.")
+
+    if not(np.isclose(A @ F, 0).all()):
+        raise ValueError("Error in equality constraint elimination: F miscalculated and AF != 0")
+
+    # newFunc = lambda z: np.dot(F, z) + x_hat
+
+    return F, x_hat
+
+
+def compose_eq_cons_func(func, F, x_hat):
+    newFunc = lambda z: np.dot(F, z) + x_hat
+    return newFunc

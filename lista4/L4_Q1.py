@@ -61,22 +61,24 @@ for initialX in initialXList:
     fRef = optimResult.fun
     # fevalRef = optimResult.nfev
     # deltaF = np.abs(fOpt - fRef)
-    print(eqConstraintsMat['A'].shape)
-    print(eqConstraintsMat['b'].shape)
-    print(xRef.shape)
-
-    check = eqConstraintsMat['A']@xRef
-    print(check.shape)
-    # print(np.isclose(check, eqConstraintsMat['b'], atol=xtol))
-    print(check[0] == eqConstraintsMat['b'][0])
-    print(check[1] == eqConstraintsMat['b'][1])
-    input()
+    # print(eqConstraintsMat['A'].shape)
+    # print(eqConstraintsMat['b'].shape)
+    # print(xRef.shape)
+    #
+    # check = eqConstraintsMat['A']@xRef
+    # print(check.shape)
+    # # print(np.isclose(check, eqConstraintsMat['b'], atol=xtol))
+    # print(check[0] == eqConstraintsMat['b'][0])
+    # print(check[1] == eqConstraintsMat['b'][1])
+    # input()
 
     # print("Delta f(x) = ", deltaF)
-    print("Ref x* = ", xRef)
-    print("Ref f(x*) = ", fRef)
-    print("Ref FEvals = ", fevalRef)
-    # input()
+    # print("Ref x* = ", xRef)
+    # print("Ref f(x*) = ", fRef)
+    # print("Ref FEvals = ", fevalRef)
+
+    F, x_hat = eq_constraint_elimination(function, eqConstraintsMat)
+    
 #     xList.append(xOpt)
 #     fxList.append(fOpt)
 #     fevalsList.append(fevals)
