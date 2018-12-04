@@ -28,6 +28,12 @@ eqConstraintsMat = {'A': np.array([[1, 2, 1, 2],
                     'b': np.array([[3],
                                     [5]])}
 
+# NOTE: Scipy uses inequality constraints of form
+#    f(x) >= 0
+# While Boyd uses
+#   f(x) <= 0
+# As such, they are defined in Boyd's format and converted by
+# get_scipy_constraints script
 ineqConstraints = [ lambda x: x,
 ]
 
@@ -58,8 +64,8 @@ for initialX in initialXList:
     # print("FEvals: ", fevals)
 
 
-    optimResult = spo.minimize(function, initialX, method='SLSQP', tol=xtol)
-                                # constraints=constraintList)
+    optimResult = spo.minimize(function, initialX, method='SLSQP', tol=xtol,
+                                constraints=constraintList)
     xRef = optimResult.x
     fRef = optimResult.fun
     # fevalRef = optimResult.nfev
@@ -69,25 +75,25 @@ for initialX in initialXList:
     # print("Delta f(x) = ", deltaF)
     # print("Ref FEvals = ", fevalRef)
 
-    F, x_hat = eq_constraint_elimination(function, eqConstraintsMat)
-    newFunction = compose_eq_cons_func(function, F, x_hat)
-
-    newConstraintList = get_scipy_constraints(None, ineqConstraints)
-
-
-    optimResult = spo.minimize(newFunction, np.array([0, 1]), method='SLSQP', tol=xtol)
-                                # constraints=newConstraintList)
-    xOpt = F @ optimResult.x + x_hat
-    fOpt = function(xOpt)
+    # F, x_hat = eq_constraint_elimination(function, eqConstraintsMat)
+    # newFunction = compose_eq_cons_func(function, F, x_hat)
+    #
+    # newConstraintList = get_scipy_constraints(None, ineqConstraints)
+    #
+    #
+    # optimResult = spo.minimize(newFunction, np.array([0, 1]), method='SLSQP', tol=xtol)
+    #                             # constraints=newConstraintList)
+    # xOpt = F @ optimResult.x + x_hat
+    # fOpt = function(xOpt)
 
     print("\nConstrained Optimization")
-    print("F:", F)
-    print("x_hat: ", x_hat)
+    # print("F:", F)
+    # print("x_hat: ", x_hat)
 
     print("Ref x* = ", xRef)
-    print("x*: ", xOpt)
+    # print("x*: ", xOpt)
     print("Ref f(x*) = ", fRef)
-    print("f(x*): ", fOpt)
+    # print("f(x*): ", fOpt)
 
 #     xList.append(xOpt)
 #     fxList.append(fOpt)
