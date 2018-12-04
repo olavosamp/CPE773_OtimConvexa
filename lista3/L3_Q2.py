@@ -9,7 +9,7 @@ from libs.conjugate_direction import *
 from libs.gradient_methods    import *
 
 
-xtol       = 1e-6
+ftol       = 1e-6
 maxIters   = 500
 maxItersLS = 200
 function   = func8
@@ -30,9 +30,9 @@ deltaFList = []
 
 for initialX in initialXList:
     # input()
-    sd_algorithm = FletcherReeves(function, initialX, interval=interval, xtol=xtol,
+    sd_algorithm = FletcherReeves(function, initialX, interval=interval, ftol=ftol,
                                      maxIters=maxIters, maxItersLS=maxItersLS)
-    # sd_algorithm = FletcherReeves(function, initialX, interval=interval, xtol=xtol,
+    # sd_algorithm = FletcherReeves(function, initialX, interval=interval, ftol=ftol,
     #                              maxIters=maxIters, maxItersLS=maxItersLS)
     xOpt, fOpt, fevals = sd_algorithm.optimize()
 

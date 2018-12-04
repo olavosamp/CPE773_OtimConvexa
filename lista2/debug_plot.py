@@ -20,7 +20,7 @@ initialXList = [[+4., +4.],
 # initialDir = np.array([1.0, -1.3])
 initialDir   = None
 maxIters     = 500
-xtol         = 1e-6
+ftol         = 1e-6
 
 # Assemble coordinate variables for 3D plot
 x = np.linspace(interval[0], interval[1], num=numPoints)
@@ -43,7 +43,7 @@ optimList = []
 for initialX in initialXList:
     ## Compute Backtracking Line Search
     print("\nBacktracking Line Search")
-    backtrack = BacktrackingLineSearch(function, interval, xtol=xtol, maxIters=maxIters, initialX=initialX, initialDir=initialDir)
+    backtrack = BacktrackingLineSearch(function, interval, ftol=ftol, maxIters=maxIters, initialX=initialX, initialDir=initialDir)
     xOpt = backtrack.optimize()
 
     alphaList   = np.array(backtrack.alphaList)
@@ -67,7 +67,7 @@ for initialX in initialXList:
     # print(dirList)
     # print(np.shape(dirList))
 
-    optimResult = spo.minimize(function, initialX, method='BFGS', tol=xtol)
+    optimResult = spo.minimize(function, initialX, method='BFGS', tol=ftol)
     xRef = optimResult.x
     fRef = optimResult.fun
 

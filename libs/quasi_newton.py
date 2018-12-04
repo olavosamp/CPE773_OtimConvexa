@@ -7,7 +7,7 @@ from libs.operators        import positive_definite
 from libs.line_search      import *
 
 class QuasiNewton:
-    def __init__(self, func, initialX, interval=[-1e15, 1e15], xtol=1e-6, maxIters=1e3, maxItersLS=200):
+    def __init__(self, func, initialX, interval=[-1e15, 1e15], ftol=1e-6, maxIters=1e3, maxItersLS=200):
         self.costFunc   = func
         self.gradFunc   = grad(self.evaluate)
         self.hessFunc   = hessian(self.evaluate)
@@ -15,7 +15,7 @@ class QuasiNewton:
         self.maxItersLS = maxItersLS
         self.interval   = interval
         self.fevals     = 0
-        self.xtol       = xtol
+        self.ftol       = ftol
 
         self.xLen       = np.shape(initialX)[0]
         self.direction  = np.zeros((self.maxIters, self.xLen))
@@ -24,7 +24,7 @@ class QuasiNewton:
         self.S          = np.zeros((self.maxIters, self.xLen, self.xLen))
         self.x[0]       = initialX
 
-        self.epsilon1 = self.xtol
+        self.epsilon1 = self.ftol
         self.k = 0
         self.m = 0
         self.rho = 0.1
@@ -47,7 +47,7 @@ class QuasiNewton:
         def funcLS(alpha):
             return self.evaluate(x + alpha*self.direction[self.iter])
 
-        lineSearch = FibonacciSearch(funcLS, self.interval, xtol=self.xtol, maxIters=self.maxItersLS)
+        lineSearch = FibonacciSearch(funcLS, self.interval, ftol=self.ftol, maxIters=self.maxItersLS)
         self.alpha[self.iter] = lineSearch.optimize()
         self.xLS = self.x[self.iter] + self.alpha[self.iter]*self.direction[self.iter]
         return self.xLS

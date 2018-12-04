@@ -34,7 +34,7 @@ savePath = dirs.results+"L1_Q_4-2_"
 # savePath = dirs.results+"L1_Q_4-4_"
 
 maxIters        = int(1e3)
-xtol            = 1e-5
+ftol            = 1e-5
 runtimeEvals    = 10
 stochasticEvals = 500
 
@@ -47,13 +47,13 @@ for algData in algList:
     algName = algData[1]
     print("\nRunning ", algName)
     if algName == "Brute Force":
-        numSteps = round(np.abs(interval[0] - interval[1])/xtol)
+        numSteps = round(np.abs(interval[0] - interval[1])/ftol)
         optimum, _, _, Jout = brute(targetFunction, [(interval[0], interval[1])], Ns=numSteps, full_output=True)
         optimum   = optimum[0]
         xSolution = optimum
         fevals = len(Jout)
     else:
-        alg = algData[0](targetFunction, interval, xtol=xtol, maxIters=maxIters)
+        alg = algData[0](targetFunction, interval, ftol=ftol, maxIters=maxIters)
         optimum = alg.optimize()
         fevals  = alg.fevals
     print("Result: \nx* = ", optimum)
@@ -66,7 +66,7 @@ for algData in algList:
     for i in tqdm(range(runtimeEvals)):
         start = time.perf_counter()
         if algName == "Brute Force":
-            brute(poly1, [(interval[0], interval[1])], Ns=round(1/xtol), full_output=True)
+            brute(poly1, [(interval[0], interval[1])], Ns=round(1/ftol), full_output=True)
         else:
             alg.optimize()
         end  = time.perf_counter()
@@ -81,7 +81,7 @@ for algData in algList:
 for algData in algListStochastic:
     dataDict = dict()
 
-    alg     = algData[0](targetFunction, interval, xtol=xtol, maxIters=maxIters)
+    alg     = algData[0](targetFunction, interval, ftol=ftol, maxIters=maxIters)
     algName = algData[1]
     print("\nRunning ", algName)
 
@@ -98,7 +98,7 @@ for algData in algListStochastic:
     dataDict["Algorithm"] = algName
 
     deltaX = np.abs(xSolution - stochList[:, 0])
-    mask   = deltaX < xtol
+    mask   = deltaX < ftol
     dataDict["Delta X"]   = np.mean(deltaX[mask]) # Succesful results only
     # dataDict["Delta X"]   = np.mean(deltaX) # All results
     dataDict["FEvals"]    = np.mean(stochList[mask, 1])

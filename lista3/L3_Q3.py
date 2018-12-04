@@ -9,7 +9,7 @@ from libs.conjugate_direction import *
 from libs.gradient_methods    import *
 
 
-xtol       = 3e-7
+ftol       = 3e-7
 maxIters   = 500
 maxItersLS = 200
 function   = func9
@@ -36,13 +36,13 @@ deltaFListCG   = []
 
 for maxIters in maxItersList:
     # input()
-    cg_algorithm = ConjugateGradient(function, initialX, interval=interval, xtol=xtol,
+    cg_algorithm = ConjugateGradient(function, initialX, interval=interval, ftol=ftol,
                                      maxIters=maxIters, maxItersLS=maxItersLS)
-    # sd_algorithm = FletcherReeves(function, initialX, interval=interval, xtol=xtol,
+    # sd_algorithm = FletcherReeves(function, initialX, interval=interval, ftol=ftol,
     #                              maxIters=maxIters, maxItersLS=maxItersLS)
     xOptCG, fOptCG, fevalsCG = cg_algorithm.optimize()
 
-    sd_algorithm = SteepestDescentAnalytical(function, initialX, interval=interval, xtol=xtol,
+    sd_algorithm = SteepestDescentAnalytical(function, initialX, interval=interval, ftol=ftol,
                                             maxIters=maxIters, maxItersLS=maxItersLS)
     xOptSD, fOptSD, fevalsSD = sd_algorithm.optimize()
     print(sd_algorithm.k)
@@ -59,7 +59,7 @@ for maxIters in maxItersList:
     print("x*: ", xOptSD)
     print("FEvals: ", fevalsSD)
 
-    optimResult = spo.minimize(function, initialX, method='BFGS', tol=xtol)
+    optimResult = spo.minimize(function, initialX, method='BFGS', tol=ftol)
     xRef = optimResult.x
     fRef = optimResult.fun
 

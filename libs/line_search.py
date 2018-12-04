@@ -6,10 +6,10 @@ from copy import copy
 from libs.operators import norm2
 
 class LineSearch:
-    def __init__(self, costFunc, xtol):
+    def __init__(self, costFunc, ftol):
         self.costFunc = costFunc
         self.fevals = 0
-        self.xtol = xtol
+        self.ftol = ftol
 
     def evaluate(self, x):
         result = self.costFunc(x)
@@ -18,11 +18,11 @@ class LineSearch:
 
 
 class DichotomousSearch(LineSearch):
-    def __init__(self, costFunc, interval, xtol=1e-8, maxIters=1e3):
-        super().__init__(costFunc, xtol)
+    def __init__(self, costFunc, interval, ftol=1e-8, maxIters=1e3):
+        super().__init__(costFunc, ftol)
 
         self.maxIters = maxIters
-        self.epsilon = xtol/4
+        self.epsilon = ftol/4
         self.interval = interval
 
     def get_test_points(self):
@@ -48,7 +48,7 @@ class DichotomousSearch(LineSearch):
     def optimize(self):
         self.fevals = 0
         self.iter = 0
-        while (np.abs(self.interval[0] - self.interval[1]) > self.xtol) and (self.iter < self.maxIters):
+        while (np.abs(self.interval[0] - self.interval[1]) > self.ftol) and (self.iter < self.maxIters):
             self.iteration()
             self.iter += 1
             # print("interval: ", self.interval[0])
@@ -60,11 +60,11 @@ class DichotomousSearch(LineSearch):
 
 # Fibonacci Search
 class FibonacciSearch(LineSearch):
-    def __init__(self, costFunc, interval, xtol=1e-8, maxIters=1e3):
-        super().__init__(costFunc, xtol)
+    def __init__(self, costFunc, interval, ftol=1e-8, maxIters=1e3):
+        super().__init__(costFunc, ftol)
 
         self.maxIters = maxIters
-        self.epsilon = xtol/4
+        self.epsilon = ftol/4
         self.interval = interval
 
         # Compute number of iterations required to reach epsilon
@@ -141,11 +141,11 @@ class FibonacciSearch(LineSearch):
 
 # Golden Section Search
 class GoldenSectionSearch(LineSearch):
-    def __init__(self, costFunc, interval, xtol=1e-8, maxIters=1e3):
-        super().__init__(costFunc, xtol)
+    def __init__(self, costFunc, interval, ftol=1e-8, maxIters=1e3):
+        super().__init__(costFunc, ftol)
 
         self.maxIters = maxIters
-        self.epsilon = xtol/4
+        self.epsilon = ftol/4
         self.interval = interval
 
         # self.goldenRatio = 1.618034
@@ -210,11 +210,11 @@ class GoldenSectionSearch(LineSearch):
 
 # Quadratic interpolation method
 class QuadraticInterpolation(LineSearch):
-    def __init__(self, costFunc, interval, xtol=1e-8, maxIters=1e3):
-        super().__init__(costFunc, xtol)
+    def __init__(self, costFunc, interval, ftol=1e-8, maxIters=1e3):
+        super().__init__(costFunc, ftol)
 
         self.maxIters = maxIters
-        self.epsilon = xtol/4
+        self.epsilon = ftol/4
         self.interval = interval
 
     def optimize(self):
@@ -268,11 +268,11 @@ class QuadraticInterpolation(LineSearch):
 
 # Cubic interpolation method
 class CubicInterpolation(LineSearch):
-    def __init__(self, costFunc, interval, xtol=1e-8, maxIters=1e3):
-        super().__init__(costFunc, xtol)
+    def __init__(self, costFunc, interval, ftol=1e-8, maxIters=1e3):
+        super().__init__(costFunc, ftol)
 
         self.maxIters = maxIters
-        self.epsilon  = xtol/4
+        self.epsilon  = ftol/4
         self.interval = interval
 
     def optimize(self):
@@ -352,11 +352,11 @@ class CubicInterpolation(LineSearch):
 
 # Davies-Swann-Campey Algorithm
 class DSCAlgorithm(LineSearch):
-    def __init__(self, costFunc, interval, xtol=1e-8, maxIters=1e3):
-        super().__init__(costFunc, xtol)
+    def __init__(self, costFunc, interval, ftol=1e-8, maxIters=1e3):
+        super().__init__(costFunc, ftol)
 
         self.maxIters = maxIters
-        self.epsilon = xtol/4
+        self.epsilon = ftol/4
         self.interval = interval
 
     def optimize(self):
@@ -373,7 +373,7 @@ class DSCAlgorithm(LineSearch):
         f_m  = np.zeros(self.maxIters)
 
         scaleFactor = 0.1   # K
-        increment[0] = 5*self.xtol  # Sigma_0
+        increment[0] = 5*self.ftol  # Sigma_0
         x0[0] = (self.interval[0]+self.interval[1])/2
 
         while True:
@@ -411,7 +411,7 @@ class DSCAlgorithm(LineSearch):
                 else: # if fm[self.iter] < fNew
                     x0[self.iter+1] = xm + ((2**(n-2))*p*increment[self.iter]*(fn[n-1] - fn[n]))/(2*(fn[n-1] - 2*fm + fn[n]))
 
-                if ((2**(n-2))*increment[self.iter]) <= self.xtol:
+                if ((2**(n-2))*increment[self.iter]) <= self.ftol:
                     # STEP 8
                     self.xOpt = x0[self.iter+1]
                     return self.xOpt
@@ -419,7 +419,7 @@ class DSCAlgorithm(LineSearch):
             else:
                 # STEP 7
                 x0[self.iter+1] = x0[self.iter] + (increment[self.iter]*(f_m1[self.iter] - f1[self.iter]))/(2*(f_m1[self.iter] - 2*f0[self.iter] + f1[self.iter]))
-                if increment[self.iter] < self.xtol:
+                if increment[self.iter] < self.ftol:
                     # STEP 8
                     self.xOpt = x0[self.iter+1]
                     return self.xOpt
@@ -450,9 +450,9 @@ class DSCAlgorithm(LineSearch):
 #         return t
 
 class BacktrackingOptim(LineSearch):
-    def __init__(self, costFunc, interval, xtol=1e-8, maxIters=1e3, alpha=0.5, beta=0.5,
+    def __init__(self, costFunc, interval, ftol=1e-8, maxIters=1e3, alpha=0.5, beta=0.5,
                 initialX=None, initialDir=None):
-        super().__init__(costFunc, xtol)
+        super().__init__(costFunc, ftol)
 
         self.maxIters = maxIters
         self.interval = interval
@@ -491,7 +491,7 @@ class BacktrackingOptim(LineSearch):
             while (self.evaluate(self.x + t*self.direction) > self.fx + self.alpha*t*(np.transpose(gradient) @ self.direction)) and (iter2 < self.maxIters):
                 # print("Iter2: ", iter2)
                 t = self.beta*t
-                t = np.clip(t, 2*self.xtol, None)
+                t = np.clip(t, 2*self.ftol, None)
                 iter2 += 1
             self.x = self.x + t*self.direction
             gradient = grad_func(self.x)
@@ -511,14 +511,14 @@ class BacktrackingOptim(LineSearch):
 
             # if np.ndim(gradient) > 1:
                 # print("dim>1")
-            if np.linalg.norm(gradient, ord=2) < self.xtol:
+            if np.linalg.norm(gradient, ord=2) < self.ftol:
                 self.xOpt = self.x
                 return self.xOpt
             else:
                 self.iter += 1
             # else:
             #     # print("dim = 1")
-            #     if norm2(gradient) < self.xtol:
+            #     if norm2(gradient) < self.ftol:
             #         self.xOpt = self.x
             #         return self.xOpt
             #     else:
@@ -529,11 +529,11 @@ class BacktrackingOptim(LineSearch):
 
 # Fletcher Inexact Line Search
 class FletcherILS(LineSearch):
-    def __init__(self, costFunc, interval, xtol=1e-8, maxIters=1e3, initialX=None, initialDir=None):
-        super().__init__(costFunc, xtol)
+    def __init__(self, costFunc, interval, ftol=1e-8, maxIters=1e3, initialX=None, initialDir=None):
+        super().__init__(costFunc, ftol)
 
         self.maxIters = maxIters
-        self.epsilon = xtol/4
+        self.epsilon = ftol/4
         self.interval = np.array(interval)
 
         if initialX is None:
@@ -575,7 +575,7 @@ class FletcherILS(LineSearch):
 
             gradient = self.grad_func(self.xk)
 
-            if np.linalg.norm(gradient, ord=2) <= self.xtol:
+            if np.linalg.norm(gradient, ord=2) <= self.ftol:
                 self.xOpt = self.xk
                 return self.xOpt
             else:

@@ -150,10 +150,10 @@ def compose_logarithmic_barrier(constraintList):
     return logBarrier
 
 
-def barrier_method(func, constraintList, initialX, interval=[-1e15, 1e15], xtol=1e-6, maxIters=1e3, maxItersLS=200):
+def barrier_method(func, constraintList, initialX, interval=[-1e15, 1e15], ftol=1e-6, maxIters=1e3, maxItersLS=200):
     t_0 = 10
     mu  = 5
-    epsilon = xtol
+    epsilon = ftol
 
     logBarrier    = compose_logarithmic_barrier(constraintList)
     funcList      = retrieve_constraints(constraintList, 'eq')
@@ -172,7 +172,7 @@ def barrier_method(func, constraintList, initialX, interval=[-1e15, 1e15], xtol=
 
         # Centering Step
         # Using Scipy optimizer for testing
-        optimizer = spo.minimize(centerFunc, x, method='Newton-CG', tol=xtol,
+        optimizer = spo.minimize(centerFunc, x, method='Newton-CG', tol=ftol,
                                     constraints=eqConstraints)
         x       = optimizer.x
         fevals += optimizer.nfev

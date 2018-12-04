@@ -11,7 +11,7 @@ from libs.gradient_methods    import *
 from libs.conjugate_direction import *
 
 
-xtol       = 1e-8
+ftol       = 1e-8
 maxIters   = 500
 maxItersLS = 200
 function   = func10
@@ -52,7 +52,7 @@ initialX = np.array([1,0,0,1])
 
 print("Starting optimization")
 xOpt, fOpt = barrier_method(function, constraintList, initialX, interval=interval,
-                            xtol=xtol, maxIters=maxIters, maxItersLS=maxItersLS)
+                            ftol=ftol, maxIters=maxIters, maxItersLS=maxItersLS)
 
 print("\nConstrained Optimization")
 print("x*: ", xOpt)

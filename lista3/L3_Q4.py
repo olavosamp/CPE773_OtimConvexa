@@ -9,7 +9,7 @@ from libs.quasi_newton        import *
 # from libs.gradient_methods    import *
 
 
-xtol       = 1e-6
+ftol       = 1e-6
 maxIters   = 500
 maxItersLS = 200
 function   = func8
@@ -33,7 +33,7 @@ deltaFList = []
 for initialX in initialXList:
     # print(initialX.shape)
     # input()
-    sd_algorithm = QuasiNewtonDFP(function, initialX, interval=interval, xtol=xtol,
+    sd_algorithm = QuasiNewtonDFP(function, initialX, interval=interval, ftol=ftol,
                                      maxIters=maxIters, maxItersLS=maxItersLS)
 
     xOpt, fOpt, fevals = sd_algorithm.optimize()

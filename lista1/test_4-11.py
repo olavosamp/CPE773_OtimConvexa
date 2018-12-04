@@ -9,10 +9,10 @@ def print_results(alg, string):
     xOpt = alg.optimize()
     print("x* = ", xOpt)
     print("Fevals: ", alg.fevals)
-    print("xtol: ", alg.xtol)
+    print("ftol: ", alg.ftol)
 
 
-xtol = 1e-5
+ftol = 1e-5
 maxIters = 500
 
 targetFunction = func4
@@ -21,12 +21,12 @@ interval = np.array(((-np.pi, -np.pi), (np.pi, np.pi)))
 
 # # Brute force
 # print("Brute Force"+string)
-# xOpt, fevals, _, Jout = brute(targetFunction, [(interval[0], interval[1])], Ns=round(1/xtol), full_output=True)
+# xOpt, fevals, _, Jout = brute(targetFunction, [(interval[0], interval[1])], Ns=round(1/ftol), full_output=True)
 # solution = xOpt[0]
 # print("x* = ", solution)
 # print("Fevals: ", len(Jout))
-# print("Ns: ", round(1/xtol))
-# print("xtol: ", xtol)
+# print("Ns: ", round(1/ftol))
+# print("ftol: ", ftol)
 # print(Jout)
 
 # Fletcher's Inexact Line Search
@@ -34,11 +34,11 @@ print("\nFletcher's Inexact Line Search")
 initialX = np.array([np.pi, -np.pi])
 initalDir = np.array([1.0, -1.3])
 
-fletcher = FletcherILS(func4, interval, xtol=xtol, maxIters=maxIters, initialX=initialX)
+fletcher = FletcherILS(func4, interval, ftol=ftol, maxIters=maxIters, initialX=initialX)
 xOpt = fletcher.optimize()
 print("x* = ", xOpt)
 print("Fevals: ", fletcher.fevals)
-print("xtol: ", xtol)
+print("ftol: ", ftol)
 print("maza end")
 # # Fletcher's Inexact Line Search (Stochastic)
 # print("\nFletcher's Inexact Line Search")
@@ -47,11 +47,11 @@ print("maza end")
 # fevals = np.empty(evaluations)
 # # solution = 0.10986
 # for i in range(evaluations):
-#     fletcher = FletcherILS(targetFunction, interval, xtol=xtol, maxIters=maxIters)
+#     fletcher = FletcherILS(targetFunction, interval, ftol=ftol, maxIters=maxIters)
 #     results[i] = fletcher.optimize()
 #     fevals[i]  = fletcher.fevals
 #
-# mask = np.abs(results - solution) < xtol
+# mask = np.abs(results - solution) < ftol
 # sr = np.mean(np.where(mask, 1, 0))
 # meanFevals = np.mean(fevals)
 # meanFevalsSuccess = np.mean(fevals[mask])

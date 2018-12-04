@@ -7,7 +7,7 @@ import libs.dirs              as dirs
 from libs.functions           import func7, func8
 from libs.conjugate_direction import *
 
-xtol       = 1e-6
+ftol       = 1e-6
 maxIters   = 200
 maxItersLS = 200
 function   = func7
@@ -46,7 +46,7 @@ times = 5
 deltaFSum = []
 for _ in range(times):
     # Q 6.1
-    cd_alg = ConjugateGradient(function, initialX, interval=interval, xtol=xtol,
+    cd_alg = ConjugateGradient(function, initialX, interval=interval, ftol=ftol,
                                 maxIters=maxIters, maxItersLS=maxItersLS)
     xOpt, fOpt, fevals = cd_alg.optimize()
 

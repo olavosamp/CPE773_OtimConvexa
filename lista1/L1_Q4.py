@@ -30,10 +30,10 @@ for i in range(len(X)):
 ## Compute Fletcher's Inexact Line Search
 initialX = np.array([np.pi, -np.pi])
 initialDir = np.array([1.0, -1.3])
-xtol = 1e-5
+ftol = 1e-5
 maxIters = 500
 #
-# fletcher = FletcherILS(func4, interval, xtol=xtol, maxIters=maxIters, initialX=initialX, initialDir=initialDir)
+# fletcher = FletcherILS(func4, interval, ftol=ftol, maxIters=maxIters, initialX=initialX, initialDir=initialDir)
 # xOpt = fletcher.optimize()
 #
 # alphaList = np.array(fletcher.alphaList)
@@ -73,10 +73,10 @@ maxIters = 500
 
 ## Compute Backtracking Line Search
 print("\nBacktracking Line Search")
-xtol = 1e-5
+ftol = 1e-5
 maxIters = 500
 
-backtrack = BacktrackingLineSearch(func4, interval, xtol=xtol, maxIters=maxIters, initialX=initialX, initialDir=initialDir)
+backtrack = BacktrackingLineSearch(func4, interval, ftol=ftol, maxIters=maxIters, initialX=initialX, initialDir=initialDir)
 xOpt = backtrack.optimize()
 
 # Backtrack Figure

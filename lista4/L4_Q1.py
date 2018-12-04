@@ -11,7 +11,7 @@ from libs.gradient_methods    import *
 from libs.conjugate_direction import *
 
 
-xtol       = 1e-8
+ftol       = 1e-8
 maxIters   = 500
 maxItersLS = 200
 function   = func10
@@ -52,7 +52,7 @@ fxList     = []
 fevalsList = []
 deltaFList = []
 for initialX in initialXList:
-    # sd_algorithm = ConjugateGradient(function, initialX, interval=interval, xtol=xtol,
+    # sd_algorithm = ConjugateGradient(function, initialX, interval=interval, ftol=ftol,
     #                                  maxIters=maxIters, maxItersLS=maxItersLS)
     #
     # xOpt, fOpt, fevals = sd_algorithm.optimize()
@@ -64,7 +64,7 @@ for initialX in initialXList:
     # print("FEvals: ", fevals)
 
 
-    optimResult = spo.minimize(function, initialX, method='SLSQP', tol=xtol,
+    optimResult = spo.minimize(function, initialX, method='SLSQP', tol=ftol,
                                 constraints=constraintList)
     xRef = optimResult.x
     fRef = optimResult.fun
@@ -81,7 +81,7 @@ for initialX in initialXList:
     # newConstraintList = get_scipy_constraints(None, ineqConstraints)
     #
     #
-    # optimResult = spo.minimize(newFunction, np.array([0, 1]), method='SLSQP', tol=xtol)
+    # optimResult = spo.minimize(newFunction, np.array([0, 1]), method='SLSQP', tol=ftol)
     #                             # constraints=newConstraintList)
     # xOpt = F @ optimResult.x + x_hat
     # fOpt = function(xOpt)

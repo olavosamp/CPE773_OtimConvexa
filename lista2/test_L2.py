@@ -7,7 +7,7 @@ import libs.dirs           as dirs
 from libs.functions        import func6
 from libs.gradient_methods import *
 
-xtol       = 1e-6
+ftol       = 1e-6
 maxIters   = 200
 maxItersLS = 200
 function   = func6
@@ -32,7 +32,7 @@ initialX = np.array([-2, -1, 1, 2])
 # deltaFList = []
 #
 # for initialX in initialXList:
-#     sd_algorithm = NewtonRaphson(function, initialX, interval=interval, xtol=xtol,
+#     sd_algorithm = NewtonRaphson(function, initialX, interval=interval, ftol=ftol,
 #                                  maxIters=maxIters, maxItersLS=maxItersLS)
 #     xOpt, fOpt, fevals = sd_algorithm.optimize()
 #
@@ -41,7 +41,7 @@ initialX = np.array([-2, -1, 1, 2])
 #     print("x*: ", xOpt)
 #     print("FEvals: ", fevals)
 #
-#     optimResult = spo.minimize(function, initialX, method='BFGS', tol=xtol)
+#     optimResult = spo.minimize(function, initialX, method='BFGS', tol=ftol)
 #     xRef = optimResult.x
 #     fRef = optimResult.fun
 #     deltaF = np.abs(fOpt - fRef)
@@ -67,7 +67,7 @@ initialX = np.array([-2, -1, 1, 2])
 # print(resultsDf)
 # resultsDf.to_excel(savePath)
 
-sd_algorithm = GaussNewton(function, initialX, interval=interval, xtol=xtol,
+sd_algorithm = GaussNewton(function, initialX, interval=interval, ftol=ftol,
                              maxIters=maxIters, maxItersLS=maxItersLS)
 result = sd_algorithm.optimize()
 print("fx\n", sd_algorithm.fx)

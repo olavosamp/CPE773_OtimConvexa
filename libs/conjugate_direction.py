@@ -7,7 +7,7 @@ from libs.line_search      import *
 
 
 class ConjugateDirection:
-    def __init__(self, func, initialX, interval=[-1e15, 1e15], xtol=1e-6, maxIters=1e3, maxItersLS=200):
+    def __init__(self, func, initialX, interval=[-1e15, 1e15], ftol=1e-6, maxIters=1e3, maxItersLS=200):
         self.costFunc   = func
         self.gradFunc   = grad(self.evaluate)
         self.hessFunc   = hessian(self.evaluate)
@@ -15,7 +15,7 @@ class ConjugateDirection:
         self.maxItersLS = maxItersLS
         self.interval   = interval
         self.fevals     = 0
-        self.xtol       = xtol
+        self.ftol       = ftol
 
         self.xLen       = np.shape(initialX)[0]
         self.direction  = np.zeros((self.maxIters, self.xLen))
@@ -35,8 +35,8 @@ class ConjugateDirection:
         def funcLS(alpha):
             return self.evaluate(x + alpha*self.direction[self.iter])
 
-        lineSearch = FibonacciSearch(funcLS, self.interval, xtol=self.xtol, maxIters=self.maxItersLS)
-        # lineSearch = BacktrackingOptim(funcLS, self.interval, xtol=self.xtol, maxIters=self.maxItersLS)
+        lineSearch = FibonacciSearch(funcLS, self.interval, ftol=self.ftol, maxIters=self.maxItersLS)
+        # lineSearch = BacktrackingOptim(funcLS, self.interval, ftol=self.ftol, maxIters=self.maxItersLS)
         self.alpha[self.iter] = lineSearch.optimize()
         self.xLS = self.x[self.iter] + self.alpha[self.iter]*self.direction[self.iter]
         self.fevals += lineSearch.fevals
@@ -52,8 +52,8 @@ class ConjugateDirection:
 
 
 class ConjugateGradient(ConjugateDirection):
-    def __init__(self, func, initialX, interval=[-1e15, 1e15], xtol=1e-6, maxIters=1e3, maxItersLS=200):
-        super().__init__(func, initialX, interval=interval, xtol=xtol, maxIters=maxIters, maxItersLS=maxItersLS)
+    def __init__(self, func, initialX, interval=[-1e15, 1e15], ftol=1e-6, maxIters=1e3, maxItersLS=200):
+        super().__init__(func, initialX, interval=interval, ftol=ftol, maxIters=maxIters, maxItersLS=maxItersLS)
 
         self.hessFunc   = hessian(self.evaluate)
 
@@ -76,7 +76,7 @@ class ConjugateGradient(ConjugateDirection):
 
     def stopping_cond(self):
         norm2 = np.linalg.norm(self.alpha[self.iter]*self.direction[self.iter], ord=2)
-        return norm2 < self.xtol
+        return norm2 < self.ftol
 
 
     def line_search(self):
@@ -115,8 +115,8 @@ class ConjugateGradient(ConjugateDirection):
         return self.xOpt, self.costFunc(self.x[-1]), self.fevals
 
 class FletcherReeves(ConjugateGradient):
-    def __init__(self, func, initialX, interval=[-1e15, 1e15], xtol=1e-6, maxIters=1e3, maxItersLS=200):
-        super().__init__(func, initialX, interval=interval, xtol=xtol, maxIters=maxIters, maxItersLS=maxItersLS)
+    def __init__(self, func, initialX, interval=[-1e15, 1e15], ftol=1e-6, maxIters=1e3, maxItersLS=200):
+        super().__init__(func, initialX, interval=interval, ftol=ftol, maxIters=maxIters, maxItersLS=maxItersLS)
 
         self.restartIter = self.xLen
         # self.restartIter = 20
@@ -129,8 +129,8 @@ class FletcherReeves(ConjugateGradient):
         def funcLS(alpha):
             return self.evaluate(x + alpha*self.direction[self.iter])
 
-        # lineSearch = BacktrackingOptim(funcLS, self.interval, xtol=self.xtol, maxIters=self.maxItersLS)
-        lineSearch = FibonacciSearch(funcLS, self.interval, xtol=self.xtol, maxIters=self.maxItersLS)
+        # lineSearch = BacktrackingOptim(funcLS, self.interval, ftol=self.ftol, maxIters=self.maxItersLS)
+        lineSearch = FibonacciSearch(funcLS, self.interval, ftol=self.ftol, maxIters=self.maxItersLS)
         self.alpha[self.iter] = lineSearch.optimize()
         self.xLS = x + self.alpha[self.iter]*self.direction[self.iter]
 

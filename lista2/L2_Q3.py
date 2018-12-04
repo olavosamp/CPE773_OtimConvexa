@@ -7,7 +7,7 @@ import libs.dirs           as dirs
 from libs.functions        import func5
 from libs.gradient_methods import *
 
-xtol       = 1e-6
+ftol       = 1e-6
 maxIters   = 200
 maxItersLS = 200
 function   = func5
@@ -26,7 +26,7 @@ fevalsList = []
 deltaFList = []
 
 for initialX in initialXList:
-    sd_algorithm = SteepestDescentAnalytical(function, initialX, interval=interval, xtol=xtol,
+    sd_algorithm = SteepestDescentAnalytical(function, initialX, interval=interval, ftol=ftol,
                                  maxIters=maxIters, maxItersLS=maxItersLS)
     xOpt, fOpt, fevals = sd_algorithm.optimize()
 
@@ -35,7 +35,7 @@ for initialX in initialXList:
     print("x*: ", xOpt)
     print("FEvals: ", fevals)
 
-    optimResult = spo.minimize(function, initialX, method='BFGS', tol=xtol)
+    optimResult = spo.minimize(function, initialX, method='BFGS', tol=ftol)
     xRef = optimResult.x
     fRef = optimResult.fun
     deltaF = np.abs(fOpt - fRef)

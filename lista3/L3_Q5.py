@@ -9,7 +9,7 @@ from libs.quasi_newton        import *
 from libs.gradient_methods    import *
 
 
-xtol       = 3e-7
+ftol       = 3e-7
 maxIters   = 500
 maxItersLS = 200
 function   = func9
@@ -26,7 +26,7 @@ fxList     = []
 fevalsList = []
 deltaFList = []
 for initialX in initialXList:
-    sd_algorithm = QuasiNewtonDFP(function, initialX, interval=interval, xtol=xtol,
+    sd_algorithm = QuasiNewtonDFP(function, initialX, interval=interval, ftol=ftol,
                                      maxIters=maxIters, maxItersLS=maxItersLS)
 
     xOpt, fOpt, fevals = sd_algorithm.optimize()
@@ -36,7 +36,7 @@ for initialX in initialXList:
     print("x*: ", xOpt)
     print("FEvals: ", fevals)
 
-    optimResult = spo.minimize(function, initialX, method='BFGS', tol=xtol)
+    optimResult = spo.minimize(function, initialX, method='BFGS', tol=ftol)
     xRef = optimResult.x
     fRef = optimResult.fun
     fevalRef = optimResult.nfev

@@ -11,7 +11,7 @@ from libs.gradient_methods    import *
 from libs.conjugate_direction import *
 
 
-xtol       = 1e-8
+ftol       = 1e-8
 maxIters   = 500
 maxItersLS = 200
 function   = func10
