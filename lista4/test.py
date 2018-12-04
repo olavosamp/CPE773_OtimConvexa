@@ -28,37 +28,53 @@ eqConstraintsMat = {'A': np.array([[1, 2, 1, 2],
                     'b': np.array([[3],
                                     [5]])}
 
-ineqConstraints = [ lambda x: -x[0],
-                    lambda x: -x[1],
-                    lambda x: -x[2],
-                    lambda x: -x[3],
+# Should be this? But doesn't work
+# ineqConstraints = [ lambda x: -x[0],
+#                     lambda x: -x[1],
+#                     lambda x: -x[2],
+#                     lambda x: -x[3],
+# ]
+
+# NOTE: Scipy uses inequality constraints of form
+#    f(x) >= 0
+# While Boyd uses
+#   f(x) <= 0
+# As such, they are defined in Boyd's format and converted by
+# get_scipy_constraints script
+ineqConstraints = [ lambda x: -x,
 ]
 
 constraintList = get_scipy_constraints(None, ineqConstraints)
 
-# BUG: SO ESTÁ PEGANDO O ULTIMO ELEMENTO DE X
-initialX = np.array([-10,-10,-10,-10])
+## BUG: SO ESTÁ PEGANDO O ULTIMO ELEMENTO DE X
+initialX = np.array([1,1,2,1])
 # initialX = feasibility(constraintList, initialX)
 
 logBarrier = compose_logarithmic_barrier(constraintList)
-logCheck = modified_log(-ineqConstraints[0](initialX)) + modified_log(-ineqConstraints[1](initialX)) + modified_log(-ineqConstraints[2](initialX)) + modified_log(-ineqConstraints[3](initialX))
+logCheck = modified_log(-ineqConstraints[0](initialX)) #+ \
+           # modified_log(-ineqConstraints[1](initialX)) + \
+           # modified_log(-ineqConstraints[2](initialX)) + \
+           # modified_log(-ineqConstraints[3](initialX))
 
+print("")
+print(initialX)
 print(logBarrier(initialX))
 print(logCheck)
 
-# f1 = lambda x: x+1
-# f2 = lambda x: x**2
-# f3 = lambda x: x+1.5
-# f4 = lambda x: x/2
-#
-# fList = [f1, f2, f3, f4]
-#
-# def accum(f1, f2):
-#     return lambda x: f1(x) + f2(x)
-#
-# oldH = lambda x: 0
-# for f in fList:
-#     h = accum(f, oldH)
-#     oldH = h
-#
-# print(h(2))
+print("\nTest functions")
+f1 = lambda x: x[0]+1
+f2 = lambda x: x[1]**2
+f3 = lambda x: x[2]+1.5
+f4 = lambda x: x[3]/2
+
+fList = [f1, f2, f3, f4]
+
+def accum(f1, f2):
+    return lambda x: f1(x) + f2(x)
+
+oldH = lambda x: 0
+for f in fList:
+    h = accum(f, oldH)
+    oldH = h
+print(3+4+3.5+0.5)
+print(h([2, 2, 2, 1]))

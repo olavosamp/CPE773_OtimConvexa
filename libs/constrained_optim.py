@@ -120,12 +120,12 @@ def compose_logarithmic_barrier(constraintList):
     # Compose all constraint functions in one
     oldLogBarrier = lambda x: 0
     for func in funcList:
-        newTerm = lambda x: modified_log(-func(x))
-        # newTerm = lambda x: func(x)**3
+        newTerm = lambda w: modified_log(-func(w))
+
         logBarrier = accum(oldLogBarrier, newTerm)
         oldLogBarrier = logBarrier
 
-    def logBarrier2(x):
-        print(x)
-        return logBarrier(x)
-    return logBarrier2
+    # def logBarrier2(x):
+    #     print(x)
+    #     return logBarrier(x)
+    return logBarrier
