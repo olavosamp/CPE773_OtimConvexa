@@ -1,13 +1,43 @@
-import scipy               as scp
-import scipy.optimize      as spo
-import autograd.numpy      as np
-from libs.utils            import modified_log
+import scipy                  as scp
+import scipy.optimize         as spo
+import autograd.numpy         as np
+from libs.utils               import modified_log
+from libs.conjugate_direction import ConjugateGradient
 
 # def wrap_eq_constraints(fun, mat):
 #     constraint = {'fun': fun,
 #                   'A': mat['A'],
 #                   'b': mat['b']}
 #     return constraint
+
+def delete_constraints(constraintList, type):
+    newConstraintList = []
+    for constraint in constraintList:
+
+        if constraint['type'] == type:
+            newConstraintList.append(constraint)
+
+    return newConstraintList
+
+
+
+def retrieve_constraints(constraintList, type):
+    '''
+        Receives Scipy-format constraint list and returns constraint function list.
+        Type can be
+            'eq'
+            'ineq'
+    '''
+    funcList = []
+    for constraint in constraintList:
+        if constraint['type'] == type:
+            funcList.append(constraint['fun'])
+
+    # Check if constraint list was empty
+    if len(funcList ) == 0:
+        print(funcList)
+        raise ValueError("No constraints of type {} were found.".format(type))
+    return funcList
 
 
 def get_scipy_constraints(eqConstraintsFun, ineqConstraints):
@@ -103,15 +133,7 @@ def compose_logarithmic_barrier(constraintList):
 
             f(x) = log(-f_1(x)) + log(-f_2(x)) + ...
     '''
-    funcList = []
-    for constraint in constraintList:
-        if constraint['type'] == 'ineq':
-            funcList.append(constraint['fun'])
-
-    # Check if constraint list was empty
-    if len(funcList ) == 0:
-        print(funcList)
-        raise ValueError("No inequality constraints found.")
+    funcList = retrieve_constraints(constraintList, 'eq')
 
     # Auxiliary accumulator function for composition
     def accum(f1, f2):
@@ -125,7 +147,47 @@ def compose_logarithmic_barrier(constraintList):
         logBarrier = accum(oldLogBarrier, newTerm)
         oldLogBarrier = logBarrier
 
-    # def logBarrier2(x):
-    #     print(x)
-    #     return logBarrier(x)
     return logBarrier
+
+
+def barrier_method(func, constraintList, initialX, interval=[-1e15, 1e15], xtol=1e-6, maxIters=1e3, maxItersLS=200):
+    t_0 = 10
+    mu  = 5
+    epsilon = xtol
+
+    logBarrier    = compose_logarithmic_barrier(constraintList)
+    funcList      = retrieve_constraints(constraintList, 'eq')
+
+    eqConstraints = delete_constraints(constraintList, 'ineq')
+
+
+    m = len(funcList)
+    t = t_0
+    fevals = 0
+    iter   = 0
+    while iter < maxIters - 1:
+        print("Outer iteration ", iter)
+        # Compose new centering function
+        centerFunc = lambda x: t*func(x) + logBarrier(x)
+
+        # Centering Step
+        # Using Scipy optimizer for testing
+        optimizer = spo.minimize(centerFunc, x, method='Newton-CG', tol=xtol,
+                                    constraints=eqConstraints)
+        x       = optimizer.x
+        fevals += optimizer.nfev
+
+        # Verify stopping conditions
+        if m/t < epsilon:
+            print("Stopping condition reached. Algorithm terminating.")
+            xOpt = x
+            fOpt = func(xOpt)
+            return xOpt, fOpt
+        else:
+            t    = mu*t
+            iter+= 1
+
+    print("Algorithm did not converge.")
+    xOpt = x
+    fOpt = func(xOpt)
+    return xOpt, fOpt

@@ -28,7 +28,8 @@ eqConstraintsMat = {'A': np.array([[1, 2, 1, 2],
                     'b': np.array([[3],
                                     [5]])}
 
-# Should be this? But doesn't work
+## BUG: Defining each inequality dimension individually, logBarrier uses
+# the last dimension as argument for every inequality
 # ineqConstraints = [ lambda x: -x[0],
 #                     lambda x: -x[1],
 #                     lambda x: -x[2],
@@ -44,10 +45,9 @@ eqConstraintsMat = {'A': np.array([[1, 2, 1, 2],
 ineqConstraints = [ lambda x: -x,
 ]
 
-constraintList = get_scipy_constraints(None, ineqConstraints)
+constraintList = get_scipy_constraints(eqConstraints, ineqConstraints)
 
-## BUG: SO ESTÁ PEGANDO O ULTIMO ELEMENTO DE X
-initialX = np.array([1,1,2,1])
+initialX = np.array([1,0,0,1])
 # initialX = feasibility(constraintList, initialX)
 
 logBarrier = compose_logarithmic_barrier(constraintList)
