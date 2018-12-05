@@ -8,6 +8,7 @@ from libs.constrained_optim   import *
 from libs.conjugate_direction import *
 
 
+
 ftol       = 1e-8
 maxIters   = 500
 maxItersLS = 200
@@ -21,10 +22,10 @@ def costFunction(x):
 eqConstraintsFun   = [ lambda x: x[0] + x[1] -5
 ]
 
-# eqConstraintsMat = {'A': np.array([[1, 2, 1, 2],
-#                                    [1, 1, 2, 4]]),
-#                     'b': np.array([[3],
-#                                     [5]])}
+eqConstraintsMat = {'A': np.array([[1, 1]], dtype=np.float32),
+                                   # [0, 0]]),
+                    'b': np.array([[5]], dtype=np.float32)}
+                                    # [5]])}
 
 
 # NOTE: Scipy uses inequality constraints of form
@@ -57,9 +58,9 @@ print("x ",    xOpt)
 print("f(x) ", fOpt)
 
 
-#
-# ## II. min. f(x)
-# #      s.t. x[1] + 1 <= 0
+
+## II. min. f(x)
+#      s.t. x[1] + 1 <= 0
 #
 # constraintListII = get_scipy_constraints(None, ineqConstraints)
 # optimResult = spo.minimize(costFunction, initialX, method='SLSQP', tol=ftol,
@@ -67,24 +68,45 @@ print("f(x) ", fOpt)
 # xRef = optimResult.x
 # fRef = optimResult.fun
 #
+#
+# algorithm = ConjugateGradient(costFunction, initialX, interval=interval, ftol=ftol,
+#                                  maxIters=maxIters, maxItersLS=maxItersLS)
+#
+# xOpt, fOpt, fevals = algorithm.optimize()
+#
 # print("\nProb II")
 # print("x* ",    xRef)
 # print("f(x*) ", fRef)
-#
-#
+# print("")
+# print("x ",    xOpt)
+# print("f(x) ", fOpt)
+
+
 # ## III. min. f(x)
 # #      s.t. x[0] + x[1] -5 = 0
+
+constraintListIII = get_scipy_constraints(eqConstraintsFun, None)
+optimResult = spo.minimize(costFunction, initialX, method='SLSQP', tol=ftol,
+                            constraints=constraintListIII)
+xRef = optimResult.x
+fRef = optimResult.fun
+
+
+xOpt, fOpt, fevals = eq_constraint_elimination(costFunction, eqConstraintsMat, initialX,
+                    interval=interval, ftol=ftol, maxIters=maxIters, maxItersLS=maxItersLS)
 #
-# constraintListIII = get_scipy_constraints(eqConstraintsFun, None)
-# optimResult = spo.minimize(costFunction, initialX, method='SLSQP', tol=ftol,
-#                             constraints=constraintListIII)
-# xRef = optimResult.x
-# fRef = optimResult.fun
+# algorithm = ConjugateGradient(costFunction, eqConstraintsMat, initialX, interval=interval, ftol=ftol,
+#                                  maxIters=maxIters, maxItersLS=maxItersLS)
 #
-# print("\nProb III")
-# print("x* ",    xRef)
-# print("f(x*) ", fRef)
-#
+# xOpt, fOpt, fevals = algorithm.optimize()
+
+print("\nProb II")
+print("x* ",    xRef)
+print("f(x*) ", fRef)
+print("")
+print("x ",    xOpt)
+print("f(x) ", fOpt)
+
 # ## IV. min. f(x)
 # #      s.t. x[1] + 1 <= 0
 # #           x[0] + x[1] -5 = 0

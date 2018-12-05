@@ -1,8 +1,10 @@
 import scipy                  as scp
 import scipy.optimize         as spo
 import autograd.numpy         as np
+from autograd                 import grad
 from libs.utils               import modified_log
 from libs.conjugate_direction import ConjugateGradient
+from libs.gradient_methods    import *
 
 # def wrap_eq_constraints(fun, mat):
 #     constraint = {'fun': fun,
@@ -96,39 +98,47 @@ def eq_constraint_elimination_composer(eqConstraintsMat):
     A = eqConstraintsMat['A']
     b = eqConstraintsMat['b']
 
-    xLen = A.shape[1]
+    if A.ndim == 1:
+        xLen = 1
+    else:
+        xLen = A.shape[1]
     bLen = b.shape[0]
 
-    optimResult = spo.linprog(np.zeros(xLen), A_eq=A, b_eq=b)
-    x_hat = optimResult.x
+    x_hat = scp.linalg.lstsq(A,b)[0]
 
     # Find a matrix F whose range is the nullspace of A
     F = scp.linalg.null_space(A)
 
     # Result check
-    check = A @ x_hat
+    check = np.dot(A, x_hat)
     for i in range(bLen):
         if check[i] != b[i]:
+            print("A . x_hat\n")
+            print(check)
+            print("b\n")
+            print(b)
             raise ValueError("Error in equality constraint elimination: x_hat does not satisfy Ax = b.")
 
-    if not(np.isclose(A @ F, 0).all()):
+    if not(np.isclose(A @ F, 0., atol=1e-7).all()):
+        print("A @ F\n")
+        print(A @ F)
         raise ValueError("Error in equality constraint elimination: F miscalculated and AF != 0")
 
     return F, x_hat
 
 
-def compose_eq_cons_func(func, F, x_hat):
+def eq_constraint_elimination_func(func, F, x_hat):
     '''
         Create parametrized cost function, based on F and x_hat obtained by equality
         constraint elimination.
 
         Returns: parametrized function of z, f(z) = Fz + x_hat
     '''
-    print(F.shape)
-    # print(z.shape)
-    print(x_hat.shape)
-    newFunc = lambda z: func(F @ z )#+ x_hat)
-    input()
+
+    # print(F.shape)
+    # print(x_hat.shape)
+    # input()
+    newFunc = lambda z: func(np.dot(F, z) + x_hat)[0]
     return newFunc
 
 
@@ -159,18 +169,53 @@ def compose_logarithmic_barrier(constraintList):
     return logBarrier
 
 
-def eq_constraint_elimination(func, eqConstraintsMat, initialX, interval=[-1e15, 1e15], ftol=1e-6, maxIters=1e3, maxItersLS=200):
-    F, x_hat = eq_constraint_elimination_composer(eqConstraintsMat)
+def eq_constraint_elimination(func, eqConstraintsMat, initialX, interval=[-1e15, 1e15],
+                              ftol=1e-6, maxIters=1e3, maxItersLS=200):
+    fevals = 0
+    xLen = initialX.shape[0]              # n
+    bLen = eqConstraintsMat['b'].shape[0] # p
+    F, x_hat  = eq_constraint_elimination_composer(eqConstraintsMat)
+    paramFunc = eq_constraint_elimination_func(func, F, x_hat)
 
-    paramFunc = compose_eq_cons_func(func, F, x_hat)
 
-    optimizer = spo.minimize(paramFunc, initialX, method='BFGS', tol=ftol)
-    z       = optimizer.x
+    # Choose any initial Z
+    initialZ = np.zeros((xLen - bLen,1)) # Must be (n - p)x1
 
-    fevals += optimizer.nfev
-    xOpt = F @ z + x_hat
+    # print("f(Fz + x_hat): ", func(np.dot(F, initialZ) + x_hat))
+    print("paramFunc(z):", paramFunc(initialZ))
+    # print(grad(paramFunc)(initialZ))
+    # input()
 
-    return xOpt, fevals
+    # Scipy optimizer
+    # optimizer  = spo.minimize(paramFunc, initialZ, method='BFGS', tol=ftol)
+    # zOpt       = optimizer.x
+
+    # Find z* to minimize parametrized cost function
+    algorithm = ConjugateGradient(paramFunc, initialZ, interval=interval, ftol=ftol,
+                                     maxIters=maxIters, maxItersLS=maxItersLS)
+
+    zOpt, _, zFevals = algorithm.optimize()
+
+    zOpt.shape = (xLen - bLen, 1)
+
+    # # Debug
+    # print("F: ", F.shape)
+    # print("A:", eqConstraintsMat['A'].shape)
+    # print("b:", eqConstraintsMat['b'].shape)
+    # print("x_hat: ", x_hat.shape)
+    # print("initialZ: ", initialZ.shape)
+    # print("F@z + x_hat", (np.dot(F, initialZ) + x_hat).shape)
+    # print((np.dot(F, initialZ) + x_hat))
+    # print("zOpt: ", zOpt.shape)
+    # input()
+
+    # fevals += optimizer.nfev
+    xOpt = np.dot(F,  zOpt) + x_hat
+    fOpt = func(xOpt)
+    print("xOpt", xOpt.shape)
+    print("fOpt", fOpt.shape)
+    input()
+    return xOpt, fOpt, fevals
 
 
 def barrier_method(func, constraintList, eqConstraintsMat, initialX, interval=[-1e15, 1e15], ftol=1e-6, maxIters=1e3, maxItersLS=200):
@@ -200,10 +245,10 @@ def barrier_method(func, constraintList, eqConstraintsMat, initialX, interval=[-
 
         # Centering Step
         # Using Scipy optimizer for testing
-        x, centerFevals = eq_constraint_elimination(centerFunc, eqConstraintsMat, x,
-                            interval=interval, ftol=ftol, maxIters=maxIters, maxItersLS=maxItersLS)
-        fevals += centerFevals
-        print(x)
+        # x, centerFevals = eq_constraint_elimination(centerFunc, eqConstraintsMat, x,
+        #                     interval=interval, ftol=ftol, maxIters=maxIters, maxItersLS=maxItersLS)
+        # fevals += centerFevals
+        # print(x)
 
         # Verify stopping conditions
         if m/t < epsilon:
