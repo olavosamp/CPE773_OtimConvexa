@@ -42,16 +42,18 @@ eqConstraintsMat = {'A': np.array([[1, 2, 1, 2],
 #   f(x) <= 0
 # As such, they are defined in Boyd's format and converted by
 # get_scipy_constraints script
-ineqConstraints = [ lambda x: -x,
+ineqConstraints = [ lambda x: x,
 ]
 
 constraintList = get_scipy_constraints(eqConstraintsFun, ineqConstraints)
 
 initialX = np.array([1,0,0,1])
-# initialX = feasibility(constraintList, initialX)
+initialX = feasibility(constraintList, initialX)
+
+print("Initial X:\n", initialX)
 
 print("Starting optimization")
-xOpt, fOpt = barrier_method(function, constraintList, initialX, interval=interval,
+xOpt, fOpt = barrier_method(function, constraintList, eqConstraintsMat, initialX, interval=interval,
                             ftol=ftol, maxIters=maxIters, maxItersLS=maxItersLS)
 
 print("\nConstrained Optimization")

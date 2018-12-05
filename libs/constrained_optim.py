@@ -20,7 +20,6 @@ def delete_constraints(constraintList, type):
     return newConstraintList
 
 
-
 def retrieve_constraints(constraintList, type):
     '''
         Receives Scipy-format constraint list and returns constraint function list.
@@ -47,6 +46,12 @@ def get_scipy_constraints(eqConstraintsFun, ineqConstraints):
                List of functions corresponding to the equality and inequality
                 constraints, respectively.
 
+                Note: The script receives inequality constraints of form
+                    f_i(x) <= 0
+                and converts to
+                    f_i(x) >= 0,
+                to fit Scipy formatting.
+
         Returns:
             constraintList:
                List of dicts with the input constraints
@@ -55,7 +60,7 @@ def get_scipy_constraints(eqConstraintsFun, ineqConstraints):
     if ineqConstraints != None:
         for consFunc in ineqConstraints:
             cons = {'type': 'ineq',
-            'fun': consFunc,
+            'fun': lambda x: -consFunc(x),
             }
             constraintList.append(cons)
 
@@ -80,7 +85,7 @@ def feasibility(constraintList, initialX, tolerance=1e-8):
     return feasiblePoint
 
 
-def eq_constraint_elimination(func, eqConstraintsMat):
+def eq_constraint_elimination_composer(eqConstraintsMat):
     '''
         Eliminates equality constraints Ax = b by parametrization of x as Fz + x_hat.
         F is the nullspace of matrix A, such as AFz = 0, where z is any vector.
@@ -119,7 +124,11 @@ def compose_eq_cons_func(func, F, x_hat):
 
         Returns: parametrized function of z, f(z) = Fz + x_hat
     '''
-    newFunc = lambda z: func(F @ z + x_hat)
+    print(F.shape)
+    # print(z.shape)
+    print(x_hat.shape)
+    newFunc = lambda z: func(F @ z )#+ x_hat)
+    input()
     return newFunc
 
 
@@ -150,32 +159,51 @@ def compose_logarithmic_barrier(constraintList):
     return logBarrier
 
 
-def barrier_method(func, constraintList, initialX, interval=[-1e15, 1e15], ftol=1e-6, maxIters=1e3, maxItersLS=200):
-    t_0 = 10
-    mu  = 5
+def eq_constraint_elimination(func, eqConstraintsMat, initialX, interval=[-1e15, 1e15], ftol=1e-6, maxIters=1e3, maxItersLS=200):
+    F, x_hat = eq_constraint_elimination_composer(eqConstraintsMat)
+
+    paramFunc = compose_eq_cons_func(func, F, x_hat)
+
+    optimizer = spo.minimize(paramFunc, initialX, method='BFGS', tol=ftol)
+    z       = optimizer.x
+
+    fevals += optimizer.nfev
+    xOpt = F @ z + x_hat
+
+    return xOpt, fevals
+
+
+def barrier_method(func, constraintList, eqConstraintsMat, initialX, interval=[-1e15, 1e15], ftol=1e-6, maxIters=1e3, maxItersLS=200):
+    t_0     = 10
+    mu      = 5
     epsilon = ftol
+    x       = initialX
 
     logBarrier    = compose_logarithmic_barrier(constraintList)
     funcList      = retrieve_constraints(constraintList, 'eq')
 
     eqConstraints = delete_constraints(constraintList, 'ineq')
 
-
     m = len(funcList)
+
     t = t_0
     fevals = 0
     iter   = 0
     while iter < maxIters - 1:
         print("Outer iteration ", iter)
         # Compose new centering function
+        print("debug1")
         centerFunc = lambda x: t*func(x) + logBarrier(x)
+        print("debug2")
+        print(centerFunc(x))
+        input()
 
         # Centering Step
         # Using Scipy optimizer for testing
-        optimizer = spo.minimize(centerFunc, x, method='Newton-CG', tol=ftol,
-                                    constraints=eqConstraints)
-        x       = optimizer.x
-        fevals += optimizer.nfev
+        x, centerFevals = eq_constraint_elimination(centerFunc, eqConstraintsMat, x,
+                            interval=interval, ftol=ftol, maxIters=maxIters, maxItersLS=maxItersLS)
+        fevals += centerFevals
+        print(x)
 
         # Verify stopping conditions
         if m/t < epsilon:

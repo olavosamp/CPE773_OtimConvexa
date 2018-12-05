@@ -75,16 +75,16 @@ for initialX in initialXList:
     # print("Delta f(x) = ", deltaF)
     # print("Ref FEvals = ", fevalRef)
 
-    # F, x_hat = eq_constraint_elimination(function, eqConstraintsMat)
-    # newFunction = compose_eq_cons_func(function, F, x_hat)
-    #
-    # newConstraintList = get_scipy_constraints(None, ineqConstraints)
-    #
-    #
-    # optimResult = spo.minimize(newFunction, np.array([0, 1]), method='SLSQP', tol=ftol)
-    #                             # constraints=newConstraintList)
-    # xOpt = F @ optimResult.x + x_hat
-    # fOpt = function(xOpt)
+    F, x_hat = eq_constraint_elimination_composer(eqConstraintsMat)
+    newFunction = compose_eq_cons_func(function, F, x_hat)
+
+    newConstraintList = get_scipy_constraints(None, ineqConstraints)
+
+
+    optimResult = spo.minimize(newFunction, np.array([0, 1]), method='SLSQP', tol=ftol)
+                                # constraints=newConstraintList)
+    xOpt = F @ optimResult.x + x_hat
+    fOpt = function(xOpt)
 
     print("\nConstrained Optimization")
     # print("F:", F)

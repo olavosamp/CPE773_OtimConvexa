@@ -80,8 +80,6 @@ class ConjugateGradient(ConjugateDirection):
 
 
     def line_search(self):
-        self.alpha[self.iter] = (np.transpose(self.g[self.iter]) @ self.g[self.iter])/(np.transpose(self.direction[self.iter]) @ self.hessVal[self.iter] @ self.direction[self.iter])
-
         self.xLS = self.x[self.iter] + self.alpha[self.iter]*self.direction[self.iter]
         return self.xLS
 
@@ -92,12 +90,26 @@ class ConjugateGradient(ConjugateDirection):
         # Initial values for g and d
         self.g[0] = self.b + self.H @ self.x[0]
         self.direction[0] = -self.g[0]
-
         while self.iter < self.maxIters-2:
             self.hessVal[self.iter] = self.hessFunc(self.x[self.iter])
-            self.alpha[self.iter] = (np.transpose(self.g[self.iter]) @ self.g[self.iter])/(np.transpose(self.direction[self.iter]) @ self.hessVal[self.iter] @ self.direction[self.iter])
 
-            self.x[self.iter+1] = self.line_search()
+            # Check if gradient is zero. If true, skip to stopping condition check
+            if not (self.g[self.iter] == 0).all():
+                self.alpha[self.iter] = (np.transpose(self.g[self.iter]) @ self.g[self.iter])/ \
+                (np.transpose(self.direction[self.iter]) @ self.hessVal[self.iter] @ self.direction[self.iter])
+
+                self.x[self.iter+1] = self.line_search()
+            else:
+                self.x[self.iter+1] = self.x[self.iter]
+
+            ## Debug
+            # p|rint("\nIter", self.iter)
+            # print("hessVal:\n", self.hessVal[self.iter])
+            # print("g:\t", self.g[self.iter])
+            # print("direction: ", self.direction[self.iter])
+            # print("alpha[k]: ", self.alpha[self.iter])
+            # print("x[k+1]: ", self.x[self.iter+1])
+            # input()
 
             # Check stopping condition
             if self.stopping_cond() == True:
@@ -107,12 +119,12 @@ class ConjugateGradient(ConjugateDirection):
 
             # Compute new direction
             self.direction[self.iter+1] = self.get_direction()
-
             self.iter += 1
 
         print("\nAlgorithm did not converge.")
         self.xOpt = self.x[-1]
         return self.xOpt, self.costFunc(self.x[-1]), self.fevals
+
 
 class FletcherReeves(ConjugateGradient):
     def __init__(self, func, initialX, interval=[-1e15, 1e15], ftol=1e-6, maxIters=1e3, maxItersLS=200):
