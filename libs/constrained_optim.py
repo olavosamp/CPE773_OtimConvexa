@@ -1,11 +1,12 @@
 import scipy                  as scp
 import scipy.optimize         as spo
 import autograd.numpy         as np
+from copy                     import copy
 from autograd                 import grad
 from libs.utils               import modified_log
 from libs.conjugate_direction import ConjugateGradient
 from libs.gradient_methods    import *
-from libs.gradient_methods    import *
+from libs.quasi_newton        import *
 
 
 def delete_constraints(constraintList, type):
@@ -44,7 +45,7 @@ def get_scipy_constraints(eqConstraintsFun, ineqConstraints, scipy=True):
                List of functions corresponding to the equality and inequality
                 constraints, respectively.
 
-                Note: The script receives inequality constraints of form
+                Note: If scipy=True, the script receives inequality constraints of form
                     f_i(x) <= 0
                 and converts to
                     f_i(x) >= 0,
@@ -54,27 +55,48 @@ def get_scipy_constraints(eqConstraintsFun, ineqConstraints, scipy=True):
             constraintList:
                List of dicts with the input constraints
     '''
+    initialX = [1,0, 2, 4]
+
+    # print("Start")
+    # for cons in ineqConstraints:
+    #     print(cons)
+
     constraintList = []
     if ineqConstraints != None:
         for consFunc in ineqConstraints:
             if scipy == True:
-                cons = {'type': 'ineq',
-                        'fun': lambda x: -consFunc(x),
-                }
+                func = lambda x: -consFunc(x)
+                cons = dict([('type', 'ineq'),
+                             ('fun', func)])
+
+                # cons = {'type': 'ineq',
+                #         'fun': func
+                # }
             else:
-                cons = {'type': 'ineq',
-                        'fun': lambda x: consFunc(x),
-                }
+                func = consFunc
+                cons = dict([('type', 'ineq'),
+                             ('fun', consFunc)])
+                # cons = dict{'type': 'ineq',
+                #         'fun': lambda x: consFunc(x)
+                # }
+
             constraintList.append(cons)
 
     if eqConstraintsFun != None:
         for consFunc in eqConstraintsFun:
-            cons = {'type': 'eq',
-                    'fun': consFunc,
-            }
+            cons = dict([('type', 'eq'),
+                         ('fun', consFunc)])
+            # cons = {'type': 'eq',
+            #         'fun': consFunc,
+            # }
             constraintList.append(cons)
     assert len(constraintList) != 0, "No constraints were given. Please input valid equality and/or inequality constraints."
 
+    # print("\nEnd")
+    # print(constraintList)
+    # input()
+    # for constrCheck in constraintList:
+    #     print(constrCheck['fun'](initialX))
     return constraintList
 
 
@@ -223,8 +245,8 @@ def eq_constraint_elimination(func, eqConstraintsMat, initialX, interval=[-1e15,
     return xOpt, fOpt, fevals
 
 
-def barrier_method(func, constraintList, eqConstraintsMat, initialX, interval=[-1e15, 1e15],
-                    ftol=1e-6, maxIters=1e3, maxItersLS=200, scipy=True):
+def barrier_method(func, constraintList, eqConstraintsMat, initialX, optimizer=NewtonRaphson, interval=[-1e15, 1e15],
+                    ftol=1e-6, maxIters=1e3, maxItersLS=2000, scipy=False):
     t_0     = 0.5
     mu      = 2
     epsilon = ftol
@@ -241,41 +263,36 @@ def barrier_method(func, constraintList, eqConstraintsMat, initialX, interval=[-
     t = t_0
     fevals = 0
     iter   = 0
-
-    stepLS = 1
-    iterLS = 0
-    iter2  = 0
-    alpha = 0.5
-    beta  = 0.9
     # Barreira
-    while iter < maxIters - 1:
+    while iter < int(maxIters - 1):
         # Compose new centering function
         centerFunc = lambda x: func(x) - (1/t)*logBarrier(x)
 
+
         ## Centering Step
-        ## Using Scipy optimizer for testing
-        # optimResult  = spo.minimize(centerFunc, x, method='BFGS', tol=ftol)
-        # x            = optimResult.x
-        # centerFevals = optimResult.nfev
+        if scipy == True:
+            # Using Scipy optimizer for testing
+            optimResult  = spo.minimize(centerFunc, x, method='BFGS', tol=ftol)
+            x            = optimResult.x
+            centerFevals = optimResult.nfev
+        else:
+            # BUG: ConjugateGradient still converges to f_0(x) minimum, disregarding
+            # the constraints.
+            optm = optimizer(centerFunc, x, interval=interval, ftol=ftol,
+                                             maxIters=maxIters, maxItersLS=maxItersLS)
+            x, _, centerFevals = optm.optimize()
 
-        # BUG: ConjugateGradient still converges to f_0(x) minimum, disregarding
-        # the constraints.
-        algorithm = NewtonRaphson(centerFunc, x, interval=interval, ftol=ftol,
-                                         maxIters=maxIters, maxItersLS=maxItersLS)
-        x, _, centerFevals = algorithm.optimize()
-
-        # x, centerFevals = eq_constraint_elimination(centerFunc, eqConstraintsMat, x,
-        #                     interval=interval, ftol=ftol, maxIters=maxIters, maxItersLS=maxItersLS)
-
-        # print("\nIter: ", iter)
-        # print("x: ", x)
-        # print("t: ", t)
-        # print("func(x): ", func(x))
+        print("\nIter: ", iter)
+        print("x: ", x)
+        print("t: ", t)
+        print("func(x): ", func(x))
         # print("norms(gradient): ", np.linalg.norm(gradient, ord=2))
-        # print("logBarrier(x): ", logBarrier(x))
-        # print("centerFunc(x): ", centerFunc(x))
-        # print("centerCheck  : ", func(x) - (1/t)*logBarrier(x))
-        # print("Restrição: {} <= 0".format(funcList[0](x)))
+        print("logBarrier(x): ", logBarrier(x))
+        print("centerFunc(x): ", centerFunc(x))
+        print("centerCheck  : ", func(x) - (1/t)*logBarrier(x))
+        # for func in funcList:
+        print("Restrição: {} <= 0".format(funcList[0](x)))
+        print("Restrição: {} <= 0".format(funcList[1](x)))
         # input()
 
         fevals += centerFevals

@@ -66,8 +66,9 @@ print("\nProb II")
 constraintListII = get_scipy_constraints(None, ineqConstraints, scipy=True)
 optimResult = spo.minimize(costFunction, initialX, method='SLSQP', tol=ftol,
                             constraints=constraintListII)
-xRef = optimResult.x
-fRef = optimResult.fun
+xRef      = optimResult.x
+fRef      = optimResult.fun
+fevalsRef = optimResult.nfev
 
 constraintListII = get_scipy_constraints(None, ineqConstraints, scipy=False)
 xOpt, fOpt, fevals = barrier_method(costFunction, constraintListII, eqConstraintsMat, initialX,
@@ -79,9 +80,11 @@ xOpt, fOpt, fevals = barrier_method(costFunction, constraintListII, eqConstraint
 
 print("x* ",    xRef)
 print("f(x*) ", fRef)
+print("fevals*: ", fevals)
 print("")
 print("x ",    xOpt)
 print("f(x) ", fOpt)
+print("fevals: ", fevals)
 
 
 # ## III. min. f(x)

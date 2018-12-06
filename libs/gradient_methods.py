@@ -37,6 +37,16 @@ class SteepestDescent:
         self.condVal = np.linalg.norm(self.alpha[self.k]*self.direction[self.k], ord=2)
         return self.condVal < self.ftol
 
+    def check_bad_values(self):
+        # Check for bad x or direction values
+        if np.isnan(self.x[self.k]).any() or np.isnan(self.direction[self.k]).any():
+            print("\nDescent algorithm diverged.")
+            print("x: ", self.x[self.k])
+            print("Grad(x): ", self.direction[self.k])
+
+            return self.x[self.k], self.costFunc(self.x[self.k]), self.fevals
+
+
     def optimize(self):
         self.fevals   = 0
         self.gradFunc = grad(self.evaluate)
@@ -60,12 +70,8 @@ class SteepestDescent:
             # print("f(x)", self.evaluate(self.x[self.k+1] ))
             # input()
 
-            # Check for bad x or direction values
-            if np.isnan(self.x[self.k]).any() or np.isnan(self.direction[self.k]).any():
-                print("\nDescent algorithm diverged.")
-                print("x: ", self.x[self.k])
-                print("Grad(x): ", self.direction[self.k])
-                return self.x[self.k], self.costFunc(self.x[self.k]), self.fevals
+            # Check for NaN or Inf values
+            self.check_bad_values()
 
             # Check for stopping conditions
             if self.stopping_cond() == True:
@@ -97,6 +103,16 @@ class SteepestDescentBacktracking(SteepestDescent):
 
         self.alpha[self.k] = t
         return t
+
+    def check_bad_values(self):
+        # Check if x or f(x) is Nan or inf - symptoms that the algorithm reached
+        # the constraint barrier
+        if np.isnan(self.x[self.k]).any() or np.isinf(self.x[self.k]).any() or \
+        np.isnan(self.costFunc(self.x[self.k])).any() or np.isinf(self.costFunc(self.x[self.k])).any():
+            self.alpha[self.k] *= 0.5
+
+        return self.alpha[self.k]
+
 
 class SteepestDescentAnalytical(SteepestDescent):
     def line_search(self):
