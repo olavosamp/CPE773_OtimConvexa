@@ -229,7 +229,11 @@ def eq_constraint_elimination(func, eqConstraintsMat, initialX, interval=[-1e15,
 
 def barrier_method(func, constraintList, eqConstraintsMat, initialX, interval=[-1e15, 1e15],
                     ftol=1e-6, maxIters=1e3, maxItersLS=200, scipy=True):
+<<<<<<< HEAD
     t_0     = 0.01
+=======
+    t_0     = 1
+>>>>>>> 0de7556b5c8806bf6058b4cbc45891ada35ddbaa
     mu      = 3
     epsilon = ftol
     x       = initialX
@@ -248,7 +252,11 @@ def barrier_method(func, constraintList, eqConstraintsMat, initialX, interval=[-
     while iter < maxIters - 1:
         # Compose new centering function
         centerFunc = lambda x: func(x) - (1/t)*logBarrier(x)
+<<<<<<< HEAD
 
+=======
+        
+>>>>>>> 0de7556b5c8806bf6058b4cbc45891ada35ddbaa
         print("\nIter: ", iter)
         print("x: ", x)
         print("t: ", t)
@@ -264,8 +272,11 @@ def barrier_method(func, constraintList, eqConstraintsMat, initialX, interval=[-
         # x            = optimResult.x
         # centerFevals = optimResult.nfev
 
+<<<<<<< HEAD
         # BUG: ConjugateGradient still converges to f_0(x) minimum, disregarding
         # the constraints.
+=======
+>>>>>>> 0de7556b5c8806bf6058b4cbc45891ada35ddbaa
         algorithm = ConjugateGradient(centerFunc, x, interval=interval, ftol=ftol,
                                          maxIters=maxIters, maxItersLS=maxItersLS)
 
