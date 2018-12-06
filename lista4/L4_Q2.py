@@ -111,10 +111,10 @@ for optimizer in optimizerList:
     print("f(x) ", fOpt)
     print("fevals: ", fevals)
 
-    print("\nCheck end point")
-    print("xOpt", xOpt)
-    print("f_1(x) = {} <= 0".format(ineq1(xOpt)))
-    print("f_2(x) = {} <= 0".format(ineq2(xOpt)))
+    # print("\nCheck end point")
+    # print("xOpt", xOpt)
+    # print("f_1(x) = {} <= 0".format(ineq1(xOpt)))
+    # print("f_2(x) = {} <= 0".format(ineq2(xOpt)))
     #
     # print("\nCheck1")
     # print("f_1(x)  = {} <= 0".format(ineq1(xOpt)))

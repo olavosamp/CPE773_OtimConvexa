@@ -68,17 +68,10 @@ def get_scipy_constraints(eqConstraintsFun, ineqConstraints, scipy=True):
                 func = lambda x: -consFunc(x)
                 cons = dict([('type', 'ineq'),
                              ('fun', func)])
-
-                # cons = {'type': 'ineq',
-                #         'fun': func
-                # }
             else:
                 func = consFunc
                 cons = dict([('type', 'ineq'),
                              ('fun', consFunc)])
-                # cons = dict{'type': 'ineq',
-                #         'fun': lambda x: consFunc(x)
-                # }
 
             constraintList.append(cons)
 
@@ -86,9 +79,6 @@ def get_scipy_constraints(eqConstraintsFun, ineqConstraints, scipy=True):
         for consFunc in eqConstraintsFun:
             cons = dict([('type', 'eq'),
                          ('fun', consFunc)])
-            # cons = {'type': 'eq',
-            #         'fun': consFunc,
-            # }
             constraintList.append(cons)
     assert len(constraintList) != 0, "No constraints were given. Please input valid equality and/or inequality constraints."
 
@@ -176,20 +166,24 @@ def compose_logarithmic_barrier(constraintList):
             f(x) = log(-f_1(x)) + log(-f_2(x)) + ...
     '''
     funcList = retrieve_constraints(constraintList, 'ineq')
-    print("FuncList len: ", len(funcList))
-
-    # Auxiliary accumulator function for composition
-    def accum(f1, f2):
-        return lambda x: f1(x) + f2(x)
 
     # Compose all constraint functions in one
-    oldLogBarrier = lambda x: 0
-    for func in funcList:
-        newTerm = lambda w: modified_log(-func(w))
+    def logBarrier(x):
+        resultList = list(map(lambda f: modified_log(-f(x)), funcList))
+        result = np.sum(resultList)
 
-        logBarrier = accum(oldLogBarrier, newTerm)
-        oldLogBarrier = logBarrier
+        return np.sum(result)
 
+
+    # print("\nDebug logBarrier")
+    # xBad = np.array([99, 99, 2, 4], dtype=np.float32)
+    # print(xBad)
+    # print("f_1(xb)", funcList[0](xBad))
+    # print("f_2(xb)", funcList[1](xBad))
+    #
+    # print("logBarrier manual check: ", modified_log(-funcList[1](xBad)) + modified_log(-funcList[0](xBad)))
+    # print("logBarrier(xBad): ", logBarrier(xBad))
+    # input()
     return logBarrier
 
 
@@ -282,18 +276,16 @@ def barrier_method(func, constraintList, eqConstraintsMat, initialX, optimizer=N
                                              maxIters=maxIters, maxItersLS=maxItersLS)
             x, _, centerFevals = optm.optimize()
 
-        print("\nIter: ", iter)
-        print("x: ", x)
-        print("t: ", t)
-        print("func(x): ", func(x))
-        # print("norms(gradient): ", np.linalg.norm(gradient, ord=2))
-        print("logBarrier(x): ", logBarrier(x))
-        print("centerFunc(x): ", centerFunc(x))
-        print("centerCheck  : ", func(x) - (1/t)*logBarrier(x))
-        # for func in funcList:
-        print("Restrição: {} <= 0".format(funcList[0](x)))
-        print("Restrição: {} <= 0".format(funcList[1](x)))
-        # input()
+        # print("\nIter: ", iter)
+        # print("x: ", x)
+        # print("t: ", t)
+        # print("func(x): ", func(x))
+        # # print("norms(gradient): ", np.linalg.norm(gradient, ord=2))
+        # print("logBarrier(x): ", logBarrier(x))
+        # print("centerFunc(x): ", centerFunc(x))
+        # print("centerCheck  : ", func(x) - (1/t)*logBarrier(x))
+        # print("Restrição: {} <= 0".format(funcList[0](x)))
+        # print("Restrição: {} <= 0".format(funcList[1](x)))
 
         fevals += centerFevals
         # Verify stopping conditions
