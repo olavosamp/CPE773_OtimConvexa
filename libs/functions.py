@@ -114,3 +114,19 @@ def func10(x):
     xLen = np.shape(x)[0]
     assert xLen == 4, "Input should be a vector of length {}, received".format(4, xLen)
     return x[0] + 1.5*x[1] + x[2] + x[3]
+
+def L4_Q5_f0(x):
+    arg1 = 100*(x[0]**2 - x[1])**2 + (x[0] - 1)**2 + 90*(x[2]**2 - x[3])**2
+    arg2 = (x[2] - 1)**2 + 10.1*((x[1] - 1)**2 + (x[3] - 1)**2)
+    arg3 = 19.8*(x[1] - 1)*(x[3] - 1)
+    return arg1 + arg2 + arg3
+
+def L4_Q5_ineq1(x):
+    # x_i - 10 <= 0
+    arg = x - 10
+    return -arg
+
+def L4_Q5_ineq2(x):
+    # -x_i - 10 <= 0
+    arg = -x - 10
+    return -arg

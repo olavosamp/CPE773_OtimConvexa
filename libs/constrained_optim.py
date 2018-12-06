@@ -38,7 +38,7 @@ def retrieve_constraints(constraintList, type):
     return funcList
 
 
-def get_scipy_constraints(eqConstraintsFun, ineqConstraints, scipy=True):
+def get_scipy_constraints(eqConstraintsFun, ineqConstraints, scipy=False):
     '''
         Args:
             eqConstraints, ineqConstraints:
@@ -55,8 +55,7 @@ def get_scipy_constraints(eqConstraintsFun, ineqConstraints, scipy=True):
             constraintList:
                List of dicts with the input constraints
     '''
-    initialX = [1,0, 2, 4]
-
+    # initialX = [1,0, 2, 4]
     # print("Start")
     # for cons in ineqConstraints:
     #     print(cons)
@@ -65,6 +64,7 @@ def get_scipy_constraints(eqConstraintsFun, ineqConstraints, scipy=True):
     if ineqConstraints != None:
         for consFunc in ineqConstraints:
             if scipy == True:
+                # STILL BROKEN
                 func = lambda x: -consFunc(x)
                 cons = dict([('type', 'ineq'),
                              ('fun', func)])
@@ -290,7 +290,7 @@ def barrier_method(func, constraintList, eqConstraintsMat, initialX, optimizer=N
         fevals += centerFevals
         # Verify stopping conditions
         if m/t < epsilon:
-            print("Stopping condition reached. Algorithm terminating.")
+            print("Stopping conditions reached. Barrier method terminating.")
             xOpt = x
             fOpt = func(xOpt)
             return xOpt, fOpt, fevals

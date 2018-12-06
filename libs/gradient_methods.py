@@ -109,7 +109,7 @@ class SteepestDescentBacktracking(SteepestDescent):
         # the constraint barrier
         if np.isnan(self.x[self.k]).any() or np.isinf(self.x[self.k]).any() or \
         np.isnan(self.costFunc(self.x[self.k])).any() or np.isinf(self.costFunc(self.x[self.k])).any():
-            self.alpha[self.k] *= 0.5
+            self.alpha[self.k] *= 0.1
 
         return self.alpha[self.k]
 
