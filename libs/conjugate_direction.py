@@ -103,13 +103,13 @@ class ConjugateGradient(ConjugateDirection):
                 self.x[self.iter+1] = self.x[self.iter]
 
             ## Debug
-            print("\nIter", self.iter)
-            print("hessVal:\n", self.hessVal[self.iter])
-            print("g:\t", self.g[self.iter])
-            print("direction: ", self.direction[self.iter])
-            print("alpha[k]: ", self.alpha[self.iter])
-            print("x[k+1]: ", self.x[self.iter+1])
-            input()
+            # print("\nIter", self.iter)
+            # print("hessVal:\n", self.hessVal[self.iter])
+            # print("g:\t", self.g[self.iter])
+            # print("direction: ", self.direction[self.iter])
+            # print("alpha[k]: ", self.alpha[self.iter])
+            # print("x[k+1]: ", self.x[self.iter+1])
+            # input()
 
             # Check stopping condition
             if self.stopping_cond() == True:

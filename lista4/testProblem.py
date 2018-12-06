@@ -10,8 +10,8 @@ from libs.conjugate_direction import *
 
 
 ftol       = 1e-8
-maxIters   = 500
-maxItersLS = 200
+maxIters   = 15
+maxItersLS = 2000
 interval   = [-1e3, 1e3]
 
 # Off-center paraboloid pointing towards +Z
@@ -37,7 +37,7 @@ eqConstraintsMat = {'A': np.array([[1, 1]], dtype=np.float32),
 ineqConstraints = [ lambda x: x[1] +1,
 ]
 
-initialX = np.array([6, 6])
+initialX = np.array([-6., -6.])
 
 ## I. Min f(x)
 print("\nProb I")

@@ -5,12 +5,8 @@ from autograd                 import grad
 from libs.utils               import modified_log
 from libs.conjugate_direction import ConjugateGradient
 from libs.gradient_methods    import *
+from libs.gradient_methods    import *
 
-# def wrap_eq_constraints(fun, mat):
-#     constraint = {'fun': fun,
-#                   'A': mat['A'],
-#                   'b': mat['b']}
-#     return constraint
 
 def delete_constraints(constraintList, type):
     newConstraintList = []
@@ -229,12 +225,8 @@ def eq_constraint_elimination(func, eqConstraintsMat, initialX, interval=[-1e15,
 
 def barrier_method(func, constraintList, eqConstraintsMat, initialX, interval=[-1e15, 1e15],
                     ftol=1e-6, maxIters=1e3, maxItersLS=200, scipy=True):
-<<<<<<< HEAD
-    t_0     = 0.01
-=======
-    t_0     = 1
->>>>>>> 0de7556b5c8806bf6058b4cbc45891ada35ddbaa
-    mu      = 3
+    t_0     = 0.5
+    mu      = 2
     epsilon = ftol
     x       = initialX
     xLen    = initialX[0]
@@ -249,41 +241,42 @@ def barrier_method(func, constraintList, eqConstraintsMat, initialX, interval=[-
     t = t_0
     fevals = 0
     iter   = 0
+
+    stepLS = 1
+    iterLS = 0
+    iter2  = 0
+    alpha = 0.5
+    beta  = 0.9
+    # Barreira
     while iter < maxIters - 1:
         # Compose new centering function
         centerFunc = lambda x: func(x) - (1/t)*logBarrier(x)
-<<<<<<< HEAD
 
-=======
-        
->>>>>>> 0de7556b5c8806bf6058b4cbc45891ada35ddbaa
-        print("\nIter: ", iter)
-        print("x: ", x)
-        print("t: ", t)
-        print("func(x): ", func(x))
-        print("logBarrier(x): ", logBarrier(x))
-        print("centerFunc(x): ", centerFunc(x))
-        print("centerCheck  : ", func(x) - (1/t)*logBarrier(x))
-        # input()
-
-        # Centering Step
-        # Using Scipy optimizer for testing
+        ## Centering Step
+        ## Using Scipy optimizer for testing
         # optimResult  = spo.minimize(centerFunc, x, method='BFGS', tol=ftol)
         # x            = optimResult.x
         # centerFevals = optimResult.nfev
 
-<<<<<<< HEAD
         # BUG: ConjugateGradient still converges to f_0(x) minimum, disregarding
         # the constraints.
-=======
->>>>>>> 0de7556b5c8806bf6058b4cbc45891ada35ddbaa
-        algorithm = ConjugateGradient(centerFunc, x, interval=interval, ftol=ftol,
+        algorithm = NewtonRaphson(centerFunc, x, interval=interval, ftol=ftol,
                                          maxIters=maxIters, maxItersLS=maxItersLS)
-
         x, _, centerFevals = algorithm.optimize()
 
         # x, centerFevals = eq_constraint_elimination(centerFunc, eqConstraintsMat, x,
         #                     interval=interval, ftol=ftol, maxIters=maxIters, maxItersLS=maxItersLS)
+
+        # print("\nIter: ", iter)
+        # print("x: ", x)
+        # print("t: ", t)
+        # print("func(x): ", func(x))
+        # print("norms(gradient): ", np.linalg.norm(gradient, ord=2))
+        # print("logBarrier(x): ", logBarrier(x))
+        # print("centerFunc(x): ", centerFunc(x))
+        # print("centerCheck  : ", func(x) - (1/t)*logBarrier(x))
+        # print("Restrição: {} <= 0".format(funcList[0](x)))
+        # input()
 
         fevals += centerFevals
         # Verify stopping conditions
