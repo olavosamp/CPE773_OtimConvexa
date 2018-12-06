@@ -41,7 +41,7 @@ def retrieve_constraints(constraintList, type):
     return funcList
 
 
-def get_scipy_constraints(eqConstraintsFun, ineqConstraints):
+def get_scipy_constraints(eqConstraintsFun, ineqConstraints, scipy=True):
     '''
         Args:
             eqConstraints, ineqConstraints:
@@ -61,15 +61,20 @@ def get_scipy_constraints(eqConstraintsFun, ineqConstraints):
     constraintList = []
     if ineqConstraints != None:
         for consFunc in ineqConstraints:
-            cons = {'type': 'ineq',
-            'fun': lambda x: -consFunc(x),
-            }
+            if scipy == True:
+                cons = {'type': 'ineq',
+                        'fun': lambda x: -consFunc(x),
+                }
+            else:
+                cons = {'type': 'ineq',
+                        'fun': lambda x: consFunc(x),
+                }
             constraintList.append(cons)
 
     if eqConstraintsFun != None:
         for consFunc in eqConstraintsFun:
             cons = {'type': 'eq',
-            'fun': consFunc,
+                    'fun': consFunc,
             }
             constraintList.append(cons)
     assert len(constraintList) != 0, "No constraints were given. Please input valid equality and/or inequality constraints."
@@ -152,7 +157,8 @@ def compose_logarithmic_barrier(constraintList):
 
             f(x) = log(-f_1(x)) + log(-f_2(x)) + ...
     '''
-    funcList = retrieve_constraints(constraintList, 'eq')
+    funcList = retrieve_constraints(constraintList, 'ineq')
+    print("FuncList len: ", len(funcList))
 
     # Auxiliary accumulator function for composition
     def accum(f1, f2):
@@ -174,28 +180,32 @@ def eq_constraint_elimination(func, eqConstraintsMat, initialX, interval=[-1e15,
     fevals = 0
     xLen = initialX.shape[0]              # n
     bLen = eqConstraintsMat['b'].shape[0] # p
+
     F, x_hat  = eq_constraint_elimination_composer(eqConstraintsMat)
     paramFunc = eq_constraint_elimination_func(func, F, x_hat)
 
+    # print("\neqConstraintsMat['A']: ", eqConstraintsMat['A'])
+    # print("F: ", F)
+    # input()
 
     # Choose any initial Z
     initialZ = np.zeros((xLen - bLen,1)) # Must be (n - p)x1
 
     # print("f(Fz + x_hat): ", func(np.dot(F, initialZ) + x_hat))
-    print("paramFunc(z):", paramFunc(initialZ))
+    # print("paramFunc(z):", paramFunc(initialZ))
     # print(grad(paramFunc)(initialZ))
     # input()
 
     # Scipy optimizer
     # optimizer  = spo.minimize(paramFunc, initialZ, method='BFGS', tol=ftol)
     # zOpt       = optimizer.x
+    # fevals += optimizer.nfev
 
     # Find z* to minimize parametrized cost function
     algorithm = ConjugateGradient(paramFunc, initialZ, interval=interval, ftol=ftol,
                                      maxIters=maxIters, maxItersLS=maxItersLS)
 
     zOpt, _, zFevals = algorithm.optimize()
-
     zOpt.shape = (xLen - bLen, 1)
 
     # # Debug
@@ -207,27 +217,28 @@ def eq_constraint_elimination(func, eqConstraintsMat, initialX, interval=[-1e15,
     # print("F@z + x_hat", (np.dot(F, initialZ) + x_hat).shape)
     # print((np.dot(F, initialZ) + x_hat))
     # print("zOpt: ", zOpt.shape)
+    # print("xOpt", xOpt.shape)
+    # print("fOpt", fOpt.shape)
     # input()
 
-    # fevals += optimizer.nfev
-    xOpt = np.dot(F,  zOpt) + x_hat
-    fOpt = func(xOpt)
-    print("xOpt", xOpt.shape)
-    print("fOpt", fOpt.shape)
-    input()
+    fevals += zFevals
+    xOpt    = np.squeeze(np.dot(F,  zOpt) + x_hat)
+    fOpt    = func(xOpt)
     return xOpt, fOpt, fevals
 
 
-def barrier_method(func, constraintList, eqConstraintsMat, initialX, interval=[-1e15, 1e15], ftol=1e-6, maxIters=1e3, maxItersLS=200):
-    t_0     = 10
-    mu      = 5
+def barrier_method(func, constraintList, eqConstraintsMat, initialX, interval=[-1e15, 1e15],
+                    ftol=1e-6, maxIters=1e3, maxItersLS=200, scipy=True):
+    t_0     = 0.01
+    mu      = 3
     epsilon = ftol
     x       = initialX
+    xLen    = initialX[0]
 
     logBarrier    = compose_logarithmic_barrier(constraintList)
-    funcList      = retrieve_constraints(constraintList, 'eq')
+    funcList      = retrieve_constraints(constraintList, 'ineq')
 
-    eqConstraints = delete_constraints(constraintList, 'ineq')
+    # eqConstraints = delete_constraints(constraintList, 'ineq')
 
     m = len(funcList)
 
@@ -235,27 +246,41 @@ def barrier_method(func, constraintList, eqConstraintsMat, initialX, interval=[-
     fevals = 0
     iter   = 0
     while iter < maxIters - 1:
-        print("Outer iteration ", iter)
         # Compose new centering function
-        print("debug1")
-        centerFunc = lambda x: t*func(x) + logBarrier(x)
-        print("debug2")
-        print(centerFunc(x))
-        input()
+        centerFunc = lambda x: func(x) - (1/t)*logBarrier(x)
+
+        print("\nIter: ", iter)
+        print("x: ", x)
+        print("t: ", t)
+        print("func(x): ", func(x))
+        print("logBarrier(x): ", logBarrier(x))
+        print("centerFunc(x): ", centerFunc(x))
+        print("centerCheck  : ", func(x) - (1/t)*logBarrier(x))
+        # input()
 
         # Centering Step
         # Using Scipy optimizer for testing
+        # optimResult  = spo.minimize(centerFunc, x, method='BFGS', tol=ftol)
+        # x            = optimResult.x
+        # centerFevals = optimResult.nfev
+
+        # BUG: ConjugateGradient still converges to f_0(x) minimum, disregarding
+        # the constraints.
+        algorithm = ConjugateGradient(centerFunc, x, interval=interval, ftol=ftol,
+                                         maxIters=maxIters, maxItersLS=maxItersLS)
+
+        x, _, centerFevals = algorithm.optimize()
+
         # x, centerFevals = eq_constraint_elimination(centerFunc, eqConstraintsMat, x,
         #                     interval=interval, ftol=ftol, maxIters=maxIters, maxItersLS=maxItersLS)
-        # fevals += centerFevals
-        # print(x)
 
+        fevals += centerFevals
         # Verify stopping conditions
         if m/t < epsilon:
             print("Stopping condition reached. Algorithm terminating.")
             xOpt = x
             fOpt = func(xOpt)
-            return xOpt, fOpt
+            return xOpt, fOpt, fevals
         else:
             t    = mu*t
             iter+= 1
@@ -263,4 +288,4 @@ def barrier_method(func, constraintList, eqConstraintsMat, initialX, interval=[-
     print("Algorithm did not converge.")
     xOpt = x
     fOpt = func(xOpt)
-    return xOpt, fOpt
+    return xOpt, fOpt, fevals
