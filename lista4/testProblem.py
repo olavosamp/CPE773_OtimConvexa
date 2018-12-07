@@ -11,7 +11,7 @@ from libs.conjugate_direction import *
 
 
 ftol       = 1e-8
-maxIters   = 15
+maxIters   = 200
 maxItersLS = 2000
 interval   = [-1e3, 1e3]
 
@@ -35,10 +35,10 @@ eqConstraintsMat = {'A': np.array([[1, 1]], dtype=np.float32),
 #   f(x) <= 0
 # As such, they are defined in Boyd's format and converted by
 # get_scipy_constraints script
-ineqConstraints = [ lambda x: x[1] +1,
-]
+ineqConstraints = [ lambda x: x[1] +1]
+ineqConstraintsSCP = [ lambda x: -x[1] -1]
 
-initialX = np.array([-6., -6.])
+initialX = np.array([9, -4], dtype=np.float32)
 
 # ## I. Min f(x)
 # print("\nProb I")
@@ -64,21 +64,18 @@ initialX = np.array([-6., -6.])
 # #      s.t. x[1] + 1 <= 0
 # #
 # print("\nProb II")
-# constraintListII = get_scipy_constraints(None, ineqConstraints, scipy=True)
-# optimResult = spo.minimize(costFunction, initialX, method='SLSQP', tol=ftol,
-#                             constraints=constraintListII)
-# xRef      = optimResult.x
+# # algorithm = ConjugateGradient(costFunction, initialX, interval=interval, ftol=ftol,
+# #                                  maxIters=maxIters, maxItersLS=maxItersLS)
+# #
+# # xOpt, fOpt, fevals = algorithm.optimize()
+## xRef      = optimResult.x
 # fRef      = optimResult.fun
 # fevalsRef = optimResult.nfev
 #
 # constraintListII = get_scipy_constraints(None, ineqConstraints, scipy=False)
 # xOpt, fOpt, fevals = barrier_method(costFunction, constraintListII, eqConstraintsMat, initialX,
 #                     interval=interval, ftol=ftol, maxIters=maxIters, maxItersLS=maxItersLS)
-# # algorithm = ConjugateGradient(costFunction, initialX, interval=interval, ftol=ftol,
-# #                                  maxIters=maxIters, maxItersLS=maxItersLS)
-# #
-# # xOpt, fOpt, fevals = algorithm.optimize()
-#
+
 # print("x* ",    xRef)
 # print("f(x*) ", fRef)
 # print("fevals*: ", fevals)
@@ -114,9 +111,10 @@ print("f(x) ", fOpt)
 # #      s.t. x[1] + 1 <= 0
 # #           x[0] + x[1] -5 = 0
 #
-# constraintListIV = get_scipy_constraints(eqConstraintsFun, ineqConstraints, scipy=False)
+# constraintListIV = get_scipy_constraints(eqConstraintsFun, ineqConstraints)
+# constraintListIVSCP = get_scipy_constraints(eqConstraintsFun, ineqConstraintsSCP)
 # # optimResult = spo.minimize(costFunction, initialX, method='SLSQP', tol=ftol,
-# #                             constraints=constraintListIV)
+# #                             constraints=constraintListIVSCP)
 # # xRef = optimResult.x
 # # fRef = optimResult.fun
 #

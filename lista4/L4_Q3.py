@@ -23,13 +23,15 @@ costFunction = L4_Q3_f0
 
 # Constraints defined in format:
 #    f(x) <= 0
-ineqConstraints = [L4_Q3_ineq]
+ineqConstraints  = [L4_Q3_ineq]
 
 constraintList    = get_scipy_constraints(None, ineqConstraints, scipy=False)
-constraintListSCP = get_scipy_constraints(None, ineqConstraints, scipy=False)
+initialX = np.array([0,3, 0], dtype=np.float32)
 
-initialX = [2,9, -5, -6]
-initialX = feasibility(constraintListSCP, initialX, tolerance=ftol)
+
+# eqConstraintsSCP = [lambda x: x[0] + x[1] + x[2] -3]
+# constraintListSCP = get_scipy_constraints(eqConstraintsSCP, ineqConstraints, scipy=False)
+# initialX = feasibility(constraintListSCP, initialX, tolerance=ftol)
 # print(initialX)
 # print(costFunction(initialX))
 # input()
@@ -37,10 +39,10 @@ initialX = feasibility(constraintListSCP, initialX, tolerance=ftol)
 
 print("\nCheck initial point")
 print("Initial X", initialX)
-print("f_1(x) = {} <= 0".format(L4_Q5_ineq1(initialX)))
-print("f_2(x) = {} <= 0".format(L4_Q5_ineq2(initialX)))
+print("f_1(x) = {} <= 0".format(L4_Q3_ineq(initialX)))
+# print("f_2(x) = {} <= 0".format(L4_Q3_ineq2(initialX)))
 
-optimizerList = [(SteepestDescentBacktracking,"Steepest Descent w/ Backtracking"),
+optimizerList = [(SteepestDescentBacktracking,"Steepest Descent"),
                  (NewtonRaphson,              "Newton Raphson"),
                  (ConjugateGradient,          "Conjugate Gradient"),
                  (QuasiNewtonDFP,             "Quasi-Newton DFP"),
@@ -49,15 +51,16 @@ optimizerList = [(SteepestDescentBacktracking,"Steepest Descent w/ Backtracking"
 # Get base results from Scipy
 # Scipy optimization is broken due to get_scipy_constraints error.
 # optimResult = spo.minimize(costFunction, initialX, method='SLSQP', tol=ftol,
-# constraints=constraintListSCP)
+#     constraints=constraintListSCP)
 # xRef      = optimResult.x
 # fRef      = optimResult.fun
 # fevalsRef = optimResult.nfev
 # print("\nx* ",    xRef)
 
 # Scipy minimize SLSQP Results
-fRef        = 0
-fevalsRef   = 293
+# Updated Q3
+fRef        = -18.5
+fevalsRef   = 31
 
 print("")
 print("f(x*) ", fRef)
@@ -73,10 +76,10 @@ for optTuple in optimizerList:
     optName   = optTuple[1]
 
     # Find optimum
-    xOpt, fOpt, fevals = barrier_method(costFunction, constraintList, None, initialX,
+    xOpt, fOpt, fevals = barrier_method(costFunction, constraintList, L4_Q3_eqMat, initialX,
                         optimizer=optimizer, interval=interval, ftol=ftol, maxIters=maxIters,
                          maxItersLS=maxItersLS, scipy=False)
-
+    fOpt = np.squeeze(fOpt)
     deltaF = np.abs(fOpt - fRef)
     print("")
     print("x ",    xOpt)
@@ -86,9 +89,7 @@ for optTuple in optimizerList:
 
     print("\nCheck end point")
     print("xOpt", xOpt)
-    print("f_1(x) = {} <= 0".format(L4_Q5_ineq1(xOpt)))
-    print("f_2(x) = {} <= 0".format(L4_Q5_ineq2(xOpt)))
-
+    print("f_1(x) = {} <= 0".format(L4_Q3_ineq(initialX)))
 
     optNameList.append(optName)
     xList.append(xOpt)
@@ -98,13 +99,12 @@ for optTuple in optimizerList:
 
 xList = np.array(xList)
 resultsDf = pd.DataFrame(data={"Optimizer": optNameList,
-                                "x*_1"    : xList[:, 0],
-                                "x*_2"    : xList[:, 1],
-                                "x*_3"    : xList[:, 2],
-                                "x*_4"    : xList[:, 3],
-                                "f(x*)"   : fxList,
+                                "\\(x^*_1\\)"    : xList[:, 0],
+                                "\\(x^*_2\\)"    : xList[:, 1],
+                                "\\(x^*_3\\)"    : xList[:, 2],
+                                "\\(f(x^*)\\)"   : fxList,
                                 "FEvals"  : fevalsList,
-                                "Delta F" : deltaFList})
+                                "\\(\\Delta F\\)" : deltaFList})
 
 print(resultsDf)
 resultsDf.to_excel(savePath)

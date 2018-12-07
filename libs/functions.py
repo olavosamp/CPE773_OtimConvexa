@@ -115,20 +115,21 @@ def func10(x):
     assert xLen == 4, "Input should be a vector of length {}, received".format(4, xLen)
     return x[0] + 1.5*x[1] + x[2] + x[3]
 
-def L4_Q4_f0(x):
+def L4_Q3_f0(x):
     A = np.array([[4,0,0],
                   [0,1,-1],
                   [0,-1,1]], dtype=np.float32)
     b = np.array([-8,-6,-6], dtype=np.float32)
-    f0 = 0.5*np.dot(x, np.dot(A, x)) + np.dot(x, b)
+    b.shape = (3,1)
+    f0 = 0.5*np.dot(x.T, np.dot(A, x)) + np.dot(x.T, b)
     return f0
 
 def L4_Q3_ineq(x):
     # -x <= 0
     return -x
 
-L4_Q3_eqMat = {'A': np.array([1, 1, 1]),
-               'b': np.array([3])
+L4_Q3_eqMat = {'A': np.array([[1, 1, 1]]),
+               'b': np.array([[3]])
 }
 
 def L4_Q5_f0(x):

@@ -14,14 +14,21 @@ class SteepestDescent:
         self.fevals     = 0
         self.alpha      = np.zeros(maxIters)
         self.ftol       = ftol
+        self.x_is_matrix= False
 
-        xShape = np.shape(initialX)[0]
-        self.direction  = np.zeros((maxIters, xShape))
-        self.x          = np.zeros((maxIters, xShape))
+        # initialX = [0., 0.]
+        if np.ndim(initialX) > 1:
+            self.x_is_matrix = True
+            initialX = np.squeeze(initialX)
+
+        self.xShape = np.shape(initialX)[0]
+        self.direction  = np.zeros((maxIters, self.xShape))
+        self.x          = np.zeros((maxIters, self.xShape))
         self.x[0] = initialX
 
-
     def evaluate(self, x):
+        if self.x_is_matrix:
+            x = np.reshape(x, (self.xShape,1))
         result = self.costFunc(x)
         self.fevals += 1
         return result

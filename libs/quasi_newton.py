@@ -17,12 +17,19 @@ class QuasiNewton:
         self.fevals     = 0
         self.ftol       = ftol
 
-        self.xLen       = np.shape(initialX)[0]
-        self.direction  = np.zeros((self.maxIters, self.xLen))
-        self.x          = np.zeros((self.maxIters, self.xLen))
+        self.x_is_matrix= False
+
+        if np.ndim(initialX) > 1:
+            self.x_is_matrix = True
+            initialX = np.squeeze(initialX)
+
+        self.xLen = np.shape(initialX)[0]
+        self.direction  = np.zeros((maxIters, self.xLen))
+        self.x          = np.zeros((maxIters, self.xLen))
+        self.x[0] = initialX
+
         self.gradient   = np.zeros((self.maxIters, self.xLen))
         self.S          = np.zeros((self.maxIters, self.xLen, self.xLen))
-        self.x[0]       = initialX
 
         self.epsilon1 = self.ftol
         self.k = 0
@@ -38,10 +45,11 @@ class QuasiNewton:
 
 
     def evaluate(self, x):
+        if self.x_is_matrix:
+            x = np.reshape(x, (self.xLen,1))
         result = self.costFunc(x)
         self.fevals += 1
         return result
-
 
     def line_search(self, x):
         def funcLS(alpha):

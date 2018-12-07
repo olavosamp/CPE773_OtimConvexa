@@ -98,13 +98,13 @@ for optTuple in optimizerList:
 
 xList = np.array(xList)
 resultsDf = pd.DataFrame(data={"Optimizer": optNameList,
-                                "x*_1"    : xList[:, 0],
-                                "x*_2"    : xList[:, 1],
-                                "x*_3"    : xList[:, 2],
-                                "x*_4"    : xList[:, 3],
-                                "f(x*)"   : fxList,
+                                "\\(x^*_1\\)"    : xList[:, 0],
+                                "\\(x^*_2\\)"    : xList[:, 1],
+                                "\\(x^*_3\\)"    : xList[:, 2],
+                                "\\(x^*_4\\)"    : xList[:, 3],
+                                "\\(f(x^*)\\)"   : fxList,
                                 "FEvals"  : fevalsList,
-                                "Delta F" : deltaFList})
+                                "\\(\\Delta F\\)" : deltaFList})
 
 print(resultsDf)
 resultsDf.to_excel(savePath)

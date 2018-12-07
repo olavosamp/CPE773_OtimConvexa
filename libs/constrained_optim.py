@@ -151,7 +151,7 @@ def eq_constraint_elimination_func(func, F, x_hat):
     # print(F.shape)
     # print(x_hat.shape)
     # input()
-    newFunc = lambda z: func(np.dot(F, z) + x_hat)[0]
+    newFunc = lambda z: np.squeeze(func(np.dot(F, z) + x_hat)[0])
     # newFunc = lambda z: func(np.dot(F, z))
     return newFunc
 
@@ -197,23 +197,30 @@ def eq_constraint_elimination(func, eqConstraintsMat, optimizer, initialX,
     F, x_hat  = eq_constraint_elimination_composer(eqConstraintsMat)
     paramFunc = eq_constraint_elimination_func(func, F, x_hat)
 
-    # print("\neqConstraintsMat['A']: ", eqConstraintsMat['A'])
-    # print("F: ", F)
-    # input()
-
     # Choose any initial Z
     initialZ = np.zeros((xLen - bLen,1)) # Must be (n - p)x1
-
-    # print("f(Fz + x_hat): ", func(np.dot(F, initialZ) + x_hat))
-    print("paramFunc(z):", paramFunc(initialZ))
-    print(grad(paramFunc)(initialZ))
-    input()
 
     # Scipy optimizer
     # optimizer  = spo.minimize(paramFunc, initialZ, method='BFGS', tol=ftol)
     # zOpt       = optimizer.x
-    # fevals += optimizer.nfev
+    # zFevals    = optimizer.nfev
 
+    # Debug
+    # print("F: ", F.shape)
+    # print("A:", eqConstraintsMat['A'].shape)
+    # print("b:", eqConstraintsMat['b'].shape)
+    # print("x_hat: ", x_hat.shape)
+    # print("initialZ: ", initialZ.shape)
+    # print("paramFunc(z0): ", paramFunc(initialZ))
+    # print("F@z + x_hat", (np.dot(F, initialZ) + x_hat).shape)
+    # print((np.dot(F, initialZ) + x_hat))
+    # print("zOpt: ", zOpt.shape)
+    # print("xOpt", xOpt.shape)
+    # print("fOpt", fOpt.shape)
+    # print("Restr check:\nAx* = b\n{} = {}".format(
+    # np.squeeze(np.dot(eqConstraintsMat['A'], xOpt)), eqConstraintsMat['b']
+    # ))
+    # input()
     # Find z* to minimize parametrized cost function
     algorithm = optimizer(paramFunc, initialZ, interval=interval, ftol=ftol,
                                      maxIters=maxIters, maxItersLS=maxItersLS)
@@ -221,22 +228,11 @@ def eq_constraint_elimination(func, eqConstraintsMat, optimizer, initialX,
     zOpt, _, zFevals = algorithm.optimize()
     zOpt.shape = (xLen - bLen, 1)
 
-    # # Debug
-    # print("F: ", F.shape)
-    # print("A:", eqConstraintsMat['A'].shape)
-    # print("b:", eqConstraintsMat['b'].shape)
-    # print("x_hat: ", x_hat.shape)
-    # print("initialZ: ", initialZ.shape)
-    # print("F@z + x_hat", (np.dot(F, initialZ) + x_hat).shape)
-    # print((np.dot(F, initialZ) + x_hat))
-    # print("zOpt: ", zOpt.shape)
-    # print("xOpt", xOpt.shape)
-    # print("fOpt", fOpt.shape)
-    # input()
 
     fevals += zFevals
     xOpt    = np.squeeze(np.dot(F,  zOpt) + x_hat)
-    fOpt    = func(xOpt)
+    fOpt    = np.squeeze(func(xOpt))
+
     return xOpt, fOpt, fevals
 
 
@@ -274,10 +270,11 @@ def barrier_method(func, constraintList, eqConstraintsMat, initialX, optimizer=N
             if eqConstraintsMat == None:
                 optm = optimizer(centerFunc, x, interval=interval, ftol=ftol,
                         maxIters=maxIters, maxItersLS=maxItersLS)
+                x, _, centerFevals = optm.optimize()
             else:
-                optm = eq_constraint_elimination(centerFunc, eqConstraintsMat, optimizer,
+                x, _, centerFevals = eq_constraint_elimination(centerFunc, eqConstraintsMat, optimizer,
                        x, interval=interval, ftol=ftol, maxIters=maxIters, maxItersLS=maxItersLS)
-            x, _, centerFevals = optm.optimize()
+
 
         # print("\nIter: ", iter)
         # print("x: ", x)
@@ -303,5 +300,5 @@ def barrier_method(func, constraintList, eqConstraintsMat, initialX, optimizer=N
 
     print("Algorithm did not converge.")
     xOpt = x
-    fOpt = func(xOpt)
+    fOpt = np.squeeze(func(xOpt))
     return xOpt, fOpt, fevals
