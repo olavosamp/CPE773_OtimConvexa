@@ -271,10 +271,12 @@ def barrier_method(func, constraintList, eqConstraintsMat, initialX, optimizer=N
             x            = optimResult.x
             centerFevals = optimResult.nfev
         else:
-            # BUG: ConjugateGradient still converges to f_0(x) minimum, disregarding
-            # the constraints.
-            optm = optimizer(centerFunc, x, interval=interval, ftol=ftol,
-                                             maxIters=maxIters, maxItersLS=maxItersLS)
+            if eqConstraintsMat == None:
+                optm = optimizer(centerFunc, x, interval=interval, ftol=ftol,
+                        maxIters=maxIters, maxItersLS=maxItersLS)
+            else:
+                optm = eq_constraint_elimination(centerFunc, eqConstraintsMat, optimizer,
+                       x, interval=interval, ftol=ftol, maxIters=maxIters, maxItersLS=maxItersLS)
             x, _, centerFevals = optm.optimize()
 
         # print("\nIter: ", iter)

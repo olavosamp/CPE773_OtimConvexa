@@ -5,8 +5,9 @@ import scipy.optimize      as spo
 
 import libs.dirs              as dirs
 from libs.constrained_optim   import *
+from libs.quasi_newton        import *
+from libs.gradient_methods    import *
 from libs.conjugate_direction import *
-
 
 
 ftol       = 1e-8
@@ -102,10 +103,6 @@ xOpt, fOpt, fevals = eq_constraint_elimination(costFunction, eqConstraintsMat,
                     SteepestDescentBacktracking, initialX, interval=interval,
                     ftol=ftol, maxIters=maxIters, maxItersLS=maxItersLS)
 
-# algorithm = ConjugateGradient(costFunction, eqConstraintsMat, initialX, interval=interval, ftol=ftol,
-#                                  maxIters=maxIters, maxItersLS=maxItersLS)
-#
-# xOpt, fOpt, fevals = algorithm.optimize()
 
 print("x* ",    xRef)
 print("f(x*) ", fRef)
@@ -117,12 +114,20 @@ print("f(x) ", fOpt)
 # #      s.t. x[1] + 1 <= 0
 # #           x[0] + x[1] -5 = 0
 #
-# constraintListIV = get_scipy_constraints(eqConstraintsFun, ineqConstraints)
-# optimResult = spo.minimize(costFunction, initialX, method='SLSQP', tol=ftol,
-#                             constraints=constraintListIV)
-# xRef = optimResult.x
-# fRef = optimResult.fun
+# constraintListIV = get_scipy_constraints(eqConstraintsFun, ineqConstraints, scipy=False)
+# # optimResult = spo.minimize(costFunction, initialX, method='SLSQP', tol=ftol,
+# #                             constraints=constraintListIV)
+# # xRef = optimResult.x
+# # fRef = optimResult.fun
+#
+# xOpt, fOpt, fevals = barrier_method(costFunction, constraintListIV, None, initialX,
+#                     optimizer=SteepestDescentBacktracking, interval=interval, ftol=ftol, maxIters=maxIters,
+#                      maxItersLS=maxItersLS, scipy=False)
+#
 #
 # print("\nProb IV")
-# print("x* ",    xRef)
-# print("f(x*) ", fRef)
+# # print("x* ",    xRef)
+# # print("f(x*) ", fRef)
+# # print("")
+# print("x ",    xOpt)
+# print("f(x) ", fOpt)
