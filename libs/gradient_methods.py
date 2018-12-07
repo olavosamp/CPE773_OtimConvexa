@@ -92,7 +92,7 @@ class SteepestDescentBacktracking(SteepestDescent):
         t = 1
         self.iter2 = 0
         self.alphaParam = 0.5
-        self.betaParam  = 0.7
+        self.betaParam  = 0.9
         self.alphaMin   = 1e-10
         self.fx = self.evaluate(self.x[self.k])
 
@@ -109,7 +109,7 @@ class SteepestDescentBacktracking(SteepestDescent):
         # the constraint barrier
         if np.isnan(self.x[self.k]).any() or np.isinf(self.x[self.k]).any() or \
         np.isnan(self.costFunc(self.x[self.k])).any() or np.isinf(self.costFunc(self.x[self.k])).any():
-            self.alpha[self.k] *= 0.1
+            self.alpha[self.k] *= self.betaParam
 
         return self.alpha[self.k]
 
@@ -151,7 +151,8 @@ class NewtonRaphson(SteepestDescentBacktracking):
     def get_direction(self, x):
         self.gradient = self.gradFunc(x)
         self.hessian = self.compute_hessian(x)
-        dir = -np.linalg.inv(self.hessian) @ self.gradient
+        # dir = -np.linalg.inv(self.hessian) @ self.gradient
+        dir = np.linalg.solve(self.hessian, self.gradient)
         return dir
 
 class GaussNewton(SteepestDescentAnalytical):

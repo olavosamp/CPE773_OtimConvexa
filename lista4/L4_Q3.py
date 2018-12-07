@@ -4,7 +4,7 @@ import autograd.numpy      as np
 import scipy.optimize      as spo
 
 import libs.dirs              as dirs
-from libs.functions           import L4_Q5_f0, L4_Q5_ineq1, L4_Q5_ineq2
+from libs.functions           import L4_Q3_f0, L4_Q3_ineq, L4_Q3_eqMat
 from libs.constrained_optim   import *
 from libs.quasi_newton        import *
 from libs.gradient_methods    import *
@@ -15,15 +15,15 @@ ftol       = 1e-8
 maxIters   = 200
 maxItersLS = 2000
 interval   = [-1e8, 1e8]
-savePath = dirs.results+"L4_Q5.xls"
+savePath = dirs.results+"L4_Q3.xls"
 
-# Q2
+# Q3
 # Cost function
-costFunction = L4_Q5_f0
+costFunction = L4_Q3_f0
 
 # Constraints defined in format:
 #    f(x) <= 0
-ineqConstraints = [L4_Q5_ineq1, L4_Q5_ineq2]
+ineqConstraints = [L4_Q3_ineq]
 
 constraintList    = get_scipy_constraints(None, ineqConstraints, scipy=False)
 constraintListSCP = get_scipy_constraints(None, ineqConstraints, scipy=False)

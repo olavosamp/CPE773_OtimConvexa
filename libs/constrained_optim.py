@@ -152,6 +152,7 @@ def eq_constraint_elimination_func(func, F, x_hat):
     # print(x_hat.shape)
     # input()
     newFunc = lambda z: func(np.dot(F, z) + x_hat)[0]
+    # newFunc = lambda z: func(np.dot(F, z))
     return newFunc
 
 
@@ -187,8 +188,8 @@ def compose_logarithmic_barrier(constraintList):
     return logBarrier
 
 
-def eq_constraint_elimination(func, eqConstraintsMat, initialX, interval=[-1e15, 1e15],
-                              ftol=1e-6, maxIters=1e3, maxItersLS=200):
+def eq_constraint_elimination(func, eqConstraintsMat, optimizer, initialX,
+                              interval=[-1e15, 1e15], ftol=1e-6, maxIters=1e3, maxItersLS=200):
     fevals = 0
     xLen = initialX.shape[0]              # n
     bLen = eqConstraintsMat['b'].shape[0] # p
@@ -204,9 +205,9 @@ def eq_constraint_elimination(func, eqConstraintsMat, initialX, interval=[-1e15,
     initialZ = np.zeros((xLen - bLen,1)) # Must be (n - p)x1
 
     # print("f(Fz + x_hat): ", func(np.dot(F, initialZ) + x_hat))
-    # print("paramFunc(z):", paramFunc(initialZ))
-    # print(grad(paramFunc)(initialZ))
-    # input()
+    print("paramFunc(z):", paramFunc(initialZ))
+    print(grad(paramFunc)(initialZ))
+    input()
 
     # Scipy optimizer
     # optimizer  = spo.minimize(paramFunc, initialZ, method='BFGS', tol=ftol)
@@ -214,7 +215,7 @@ def eq_constraint_elimination(func, eqConstraintsMat, initialX, interval=[-1e15,
     # fevals += optimizer.nfev
 
     # Find z* to minimize parametrized cost function
-    algorithm = ConjugateGradient(paramFunc, initialZ, interval=interval, ftol=ftol,
+    algorithm = optimizer(paramFunc, initialZ, interval=interval, ftol=ftol,
                                      maxIters=maxIters, maxItersLS=maxItersLS)
 
     zOpt, _, zFevals = algorithm.optimize()
