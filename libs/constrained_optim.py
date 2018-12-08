@@ -132,7 +132,7 @@ def eq_constraint_elimination_composer(eqConstraintsMat):
             print(b)
             raise ValueError("Error in equality constraint elimination: x_hat does not satisfy Ax = b.")
 
-    if not(np.isclose(A @ F, 0., atol=1e-7).all()):
+    if not(np.isclose(A @ F, 0., atol=1e-6).all()):
         print("A @ F\n")
         print(A @ F)
         raise ValueError("Error in equality constraint elimination: F miscalculated and AF != 0")
